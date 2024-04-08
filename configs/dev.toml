@@ -1,0 +1,39 @@
+[general]
+quoteToken = "SOL"
+dbConnectionStr = ""
+summaryLoggingInterval = 10
+dryRun = true
+
+[txn]
+skipPreflight = true
+txnSubmittingRetries = 2
+
+[pool]
+requireMintDisabled = true
+requireFreezeDisabled = true
+requireMetadata = true
+requireImage = true
+requireSymbol = true
+minBaseTokenInPool = 1000000
+minQuoteTokenInPool = 10
+
+[monitor]
+minLpBurnPercentage = 70
+minPooledTokenPercentage = 40
+detectRugPuller = true
+lpTokenPollIntervalMs = 500
+lpTokenMonitorTimeout = 300
+
+[strategy]
+takeProfitPercentage = 100
+takeProfitSellPercentage = 80
+stopLossPercentage = 50
+stopLossSellPercentage = 70
+hardCashOutTimeSec = 57
+buySlippage = 15
+buyFeeMicroLamports = 50000000
+sellSlippage = 15
+sellFeeMicroLamports = 50000000
+quoteTokenBuyInPercentage = 1
+minQuoteTokenIn = 0.1
+maxQuoteTokenIn = 0.5

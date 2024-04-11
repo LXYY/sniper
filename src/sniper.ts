@@ -6,26 +6,34 @@ import config from "./common/config";
 import solConnection from "./common/sol_connection";
 import geyserClient from "./common/geyser_client";
 import { PublicKey } from "@solana/web3.js";
+import { LIQUIDITY_STATE_LAYOUT_V4 } from "@raydium-io/raydium-sdk";
+import BN from "bn.js";
+import { SlotUpdateStatus } from "./gen/geyser/geyser";
+import { RaydiumPoolCreationEventSource } from "./event_source/raydium_event_source";
+import { inspect } from "./common/utils";
 
 async function main() {
+  // Handle SIGINT and SIGTERM gracefully.
+  async function cleanup() {
+    console.log("Cleaning up...");
+    await eventSource.stop();
+  }
+  process.on("SIGINT", async () => {
+    await cleanup();
+  });
+  process.on("SIGTERM", async () => {
+    await cleanup();
+  });
+
   console.log(config);
   const recentBlockhash = await solConnection.getLatestBlockhash();
   console.log(recentBlockhash);
-  const stream = geyserClient.subscribeProgramUpdates({
-    programs: [
-      new PublicKey("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8").toBytes(),
-    ],
+
+  const eventSource = new RaydiumPoolCreationEventSource();
+  eventSource.onPoolCreation(async (poolCreation) => {
+    console.log(`Pool created! Details: ${inspect(poolCreation)}`);
   });
-  stream.on("readable", () => {
-    const msg = stream.read(1);
-    if (msg) {
-      console.log(new PublicKey(msg.accountUpdate.pubkey).toBase58());
-      console.log(msg);
-    }
-  });
-  stream.on("error", (e) =>
-    console.error("Error in program update subscription ", e),
-  );
+  await eventSource.start();
 }
 
 main();

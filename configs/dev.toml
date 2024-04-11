@@ -18,6 +18,8 @@ minBaseTokenInPool = 1000000
 minQuoteTokenInPool = 10
 
 [monitor]
+poolCreationMonitorTimeout = 3600
+poolCreationMonitorPollIntervalMs = 400
 minLpBurnPercentage = 70
 minPooledTokenPercentage = 40
 detectRugPuller = true

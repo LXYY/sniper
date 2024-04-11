@@ -47,6 +47,8 @@ export interface PoolConfig {
 }
 
 export interface MonitorConfig {
+  poolCreationMonitorTimeout: number;
+  poolCreationMonitorPollIntervalMs: number;
   minLpBurnPercentage: number;
   minPooledTokenPercentage: number;
   detectRugPuller: boolean;

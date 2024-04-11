@@ -1,11 +1,11 @@
-import { PoolUpdate } from "../common/pool_update";
+import { PoolCreation } from "../common/types";
 
 export interface SnipingTaskDispatcher {
-  dispatchSnipingTask(poolUpdate: PoolUpdate): Promise<void>;
+  dispatchSnipingTask(poolUpdate: PoolCreation): Promise<void>;
 }
 
 export class SnipingTaskDispatcherImpl implements SnipingTaskDispatcher {
-  async dispatchSnipingTask(poolUpdate: PoolUpdate): Promise<void> {
+  async dispatchSnipingTask(poolUpdate: PoolCreation): Promise<void> {
     console.log(`Dispatching sniping task for pool update: ${poolUpdate}`);
   }
 }

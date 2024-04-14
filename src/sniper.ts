@@ -11,12 +11,22 @@ import BN from "bn.js";
 import { SlotUpdateStatus } from "./gen/geyser/geyser";
 import { RaydiumPoolCreationEventSource } from "./event_source/raydium_event_source";
 import { inspect } from "./common/utils";
+import { DefaultSnipingTaskDispatcher } from "./dispatcher/dispatcher";
+import { InMemoryCreatorBlacklist } from "./dispatcher/creator_blacklist";
+import { RaydiumV4SnipingCriteria } from "./task/sniping_criteria";
+import {
+  RaydiumV4Swapper,
+  raydiumV4SwapperFactory,
+} from "./trade/raydium_v4_swapper";
+import { InMemorySnipingAnalyticalService } from "./analytical/in_memory_analytical_service";
+import sniperConfig from "./common/config";
 
 async function main() {
+  console.log(inspect(sniperConfig));
   // Handle SIGINT and SIGTERM gracefully.
   async function cleanup() {
     console.log("Cleaning up...");
-    await eventSource.stop();
+    await dispatcher.stop();
   }
   process.on("SIGINT", async () => {
     await cleanup();
@@ -25,15 +35,14 @@ async function main() {
     await cleanup();
   });
 
-  console.log(config);
-  const recentBlockhash = await solConnection.getLatestBlockhash();
-  console.log(recentBlockhash);
-
-  const eventSource = new RaydiumPoolCreationEventSource();
-  eventSource.onPoolCreation(async (poolCreation) => {
-    console.log(`Pool created! Details: ${inspect(poolCreation)}`);
+  const dispatcher = new DefaultSnipingTaskDispatcher({
+    poolCreationEventSource: new RaydiumPoolCreationEventSource(),
+    creatorBlacklist: new InMemoryCreatorBlacklist(),
+    snipingCriteria: new RaydiumV4SnipingCriteria(),
+    tokenSwapperFactory: raydiumV4SwapperFactory,
+    snipingAnalyticalService: new InMemorySnipingAnalyticalService(),
   });
-  await eventSource.start();
+  await dispatcher.start();
 }
 
 main();

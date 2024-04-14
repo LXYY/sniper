@@ -7,7 +7,7 @@ import { MAINNET_PROGRAM_ID } from "@raydium-io/raydium-sdk";
 import bs58 from "bs58";
 import BN from "bn.js";
 import { MarketCreation } from "./types";
-import { getQuoteToken, getSplTokenFromMintAddress } from "./spl_token";
+import { fromQuoteToken, getSplTokenFromMintAddress } from "./spl_token";
 import sniperConfig from "./config";
 import { findSignature, findSigner } from "./txn_utils";
 
@@ -39,7 +39,7 @@ export async function tryGetMarketCreationFromInstruction(
   marketCreationIxn: PartiallyDecodedInstruction,
   txn: ParsedTransactionWithMeta,
 ): Promise<MarketCreation | null> {
-  const quoteToken = getQuoteToken(sniperConfig.general.quoteToken);
+  const quoteToken = fromQuoteToken(sniperConfig.general.quoteToken);
   const marketId = marketCreationIxn.accounts[0];
   const baseMint = marketCreationIxn.accounts[7];
   const quoteMint = marketCreationIxn.accounts[8];

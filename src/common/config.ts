@@ -44,6 +44,7 @@ export interface PoolConfig {
   requireSocialMedia: boolean;
   minBaseTokenInPool: number;
   minQuoteTokenInPool: number;
+  maxQuoteTokenInPool: number;
 }
 
 export interface MonitorConfig {
@@ -69,6 +70,7 @@ export interface StrategyConfig {
   quoteTokenBuyInPercentage: number;
   minQuoteTokenIn: number;
   maxQuoteTokenIn: number;
+  quoteTickIntervalMs: number;
 }
 
 function parseConfig(configFile: string): SniperConfig {

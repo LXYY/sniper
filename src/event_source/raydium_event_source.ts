@@ -31,6 +31,7 @@ import { inspect } from "../common/utils";
 import NodeCache from "node-cache";
 import { ClientReadableStream } from "@grpc/grpc-js";
 import { TimestampedAccountUpdate } from "../gen/geyser/geyser";
+import { backOff } from "exponential-backoff";
 
 // Define type for pool creation callback
 export type PoolCreationCallback = (
@@ -81,7 +82,9 @@ export class RaydiumPoolCreationEventSource implements PoolCreationEventSource {
   }
 
   async handleOpenbookTxn(txnSignature: string) {
-    const txn = await confirmAndGetTransaction(txnSignature);
+    const txn = await backOff(() => confirmAndGetTransaction(txnSignature), {
+      numOfAttempts: 1,
+    });
     if (!txn) {
       return;
     }
@@ -97,13 +100,11 @@ export class RaydiumPoolCreationEventSource implements PoolCreationEventSource {
     if (!marketCreation) {
       return;
     }
+    console.log(`Market creation detected: ${inspect(marketCreation)}`);
     const lpPoolAccount = Liquidity.getAssociatedId({
       programId: MAINNET_PROGRAM_ID.AmmV4,
       marketId: marketCreation.marketId,
     });
-    console.log(
-      `New market created! Monitoring pool address: ${lpPoolAccount.toString()}. Details: ${inspect(marketCreation)}`,
-    );
     this.poolCreationMonitor.registerAccount(
       lpPoolAccount,
       (poolKey: PublicKey, poolAccountData: Buffer) =>
@@ -119,6 +120,7 @@ export class RaydiumPoolCreationEventSource implements PoolCreationEventSource {
   ) {
     const poolState = getRaydiumV4LiquidityStateFromData(poolAccountData);
     const poolCreation = getPoolCreationFromRaydiumV4(
+      poolKey,
       poolState,
       marketCreation,
     );

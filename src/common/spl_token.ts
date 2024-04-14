@@ -21,7 +21,7 @@ export interface SplToken {
   image?: string;
 }
 
-export function getQuoteToken(quoteToken: QuoteToken): SplToken {
+export function fromQuoteToken(quoteToken: QuoteToken): SplToken {
   switch (quoteToken) {
     case QuoteToken.SOL:
       return {
@@ -37,6 +37,17 @@ export function getQuoteToken(quoteToken: QuoteToken): SplToken {
     default:
       throw new Error(`Unsupported quote token: ${quoteToken}`);
   }
+}
+
+export function toQuoteToken(token: SplToken): QuoteToken {
+  if (
+    token.mintAddress.equals(
+      new PublicKey("So11111111111111111111111111111111111111112"),
+    )
+  ) {
+    return QuoteToken.SOL;
+  }
+  throw new Error(`Unsupported quote token mint address: ${token.mintAddress}`);
 }
 
 export async function getSplTokenFromMintAddress(

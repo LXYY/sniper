@@ -69,7 +69,13 @@ export class RaydiumPoolCreationEventSource implements PoolCreationEventSource {
           return;
         }
         this.txnCache.set(logs.signature, true);
-        await this.handleOpenbookTxn(logs.signature);
+        try {
+          await this.handleOpenbookTxn(logs.signature);
+        } catch (error) {
+          console.error(
+            `Error handling openbook txn ${logs.signature}: ${error}. Skipping.`,
+          );
+        }
       },
       "processed",
     );

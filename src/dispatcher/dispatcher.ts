@@ -131,6 +131,7 @@ export class DefaultSnipingTaskDispatcher implements SnipingTaskDispatcher {
     if (this.cleanupStarted) {
       return;
     }
+    console.log("cleaning up...");
     this.cleanupStarted = true;
     const performance =
       await this.snipingAnalyticalService.getSnipingPerformance();

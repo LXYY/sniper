@@ -67,6 +67,7 @@ export class RaydiumV4Swapper implements TokenSwapper {
     return await this.getQuote(
       this.quoteToken,
       this.baseToken,
+      this.baseToken.decimals,
       buyAmount,
       slippage,
     );
@@ -76,6 +77,7 @@ export class RaydiumV4Swapper implements TokenSwapper {
     return await this.getQuote(
       this.baseToken,
       this.quoteToken,
+      this.baseToken.decimals,
       sellAmount,
       slippage,
     );
@@ -92,12 +94,13 @@ export class RaydiumV4Swapper implements TokenSwapper {
   async getQuote(
     tokenIn: SplToken,
     tokenOut: SplToken,
+    lpDecimals: number,
     amount: BN,
     slippage: number,
   ): Promise<Quote> {
     const { poolKeys, liquidityPoolInfo } = await getLiquidityPoolInfo(
       this.poolId,
-      tokenIn.decimals,
+      lpDecimals,
     );
     const tokenInRaydium = toRaydiumToken(tokenIn);
     const tokenOutRaydium = toRaydiumToken(tokenOut);

@@ -9,7 +9,7 @@ skipPreflight = true
 txnSubmittingRetries = 2
 
 [pool]
-requireMintDisabled = true
+requireMintDisabled = false
 requireFreezeDisabled = true
 requireMetadata = true
 requireImage = true
@@ -22,17 +22,17 @@ maxQuoteTokenInPool = 50
 poolCreationMonitorTimeout = 3600
 poolCreationMonitorPollIntervalMs = 50
 minLpBurnPercentage = 70
-minPooledTokenPercentage = 40
+minPooledTokenPercentage = 0
 detectRugPuller = true
 lpTokenPollIntervalMs = 500
 lpTokenMonitorTimeout = 300
 
 [strategy]
-takeProfitPercentage = 50
+takeProfitPercentage = 60
 takeProfitSellPercentage = 100
-stopLossPercentage = 20
+stopLossPercentage = 25
 stopLossSellPercentage = 100
-hardCashOutTimeSec = 180
+hardCashOutTimeSec = 27
 buySlippage = 0
 buyFeeMicroLamports = 50000000
 sellSlippage = 0

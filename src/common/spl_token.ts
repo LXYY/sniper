@@ -66,9 +66,9 @@ export async function getSplTokenFromMintAddress(
   );
 
   // Fetch the metadata from the uri
-  const jsonMetadata = await backOff(() => {
-    return fetchJsonMetadata(defaultUmi, metadata.uri);
-  });
+  // const jsonMetadata = await backOff(() => {
+  //   return fetchJsonMetadata(defaultUmi, metadata.uri);
+  // });
 
   return {
     mintAddress,
@@ -77,6 +77,5 @@ export async function getSplTokenFromMintAddress(
     freezeDisabled: !mintAccount.freezeAuthority,
     name: metadata.name,
     symbol: metadata.symbol,
-    image: jsonMetadata.image,
   };
 }

@@ -183,7 +183,7 @@ export class DefaultSnipingTask implements SnipingTask {
     const position = this.positionManager.getCurrentPosition();
     const takeProfitAmount = new BN(
       position
-        .mul(strategyConfig.takeProfitPercentage)
+        .mul(strategyConfig.takeProfitSellPercentage)
         .div(100)
         .floor()
         .toString(),
@@ -218,7 +218,7 @@ export class DefaultSnipingTask implements SnipingTask {
     const position = this.positionManager.getCurrentPosition();
     const stopLossAmount = new BN(
       position
-        .mul(strategyConfig.stopLossPercentage)
+        .mul(strategyConfig.stopLossSellPercentage)
         .div(100)
         .floor()
         .toString(),

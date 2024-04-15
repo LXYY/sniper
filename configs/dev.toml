@@ -29,9 +29,9 @@ lpTokenPollIntervalMs = 500
 lpTokenMonitorTimeout = 300
 
 [strategy]
-takeProfitPercentage = 60
+takeProfitPercentage = 100
 takeProfitSellPercentage = 100
-stopLossPercentage = 25
+stopLossPercentage = 50
 stopLossSellPercentage = 100
 hardCashOutTimeSec = 30
 buySlippage = 0

@@ -71,6 +71,9 @@ export class DefaultSnipingTaskDispatcher implements SnipingTaskDispatcher {
   async finalizeTask(summary: TaskSummary): Promise<void> {
     this.printTaskSummary(summary);
     await this.snipingAnalyticalService.recordSnipingTaskSummary(summary);
+    this.printPerformance(
+      await this.snipingAnalyticalService.getSnipingPerformance(),
+    );
   }
 
   private printTaskSummary(summary: TaskSummary) {

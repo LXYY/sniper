@@ -28,6 +28,7 @@ export interface GeneralConfig {
   dbConnectionStr: string;
   summaryLoggingInterval: number;
   dryRun: boolean;
+  priceSampleInterval: number;
 }
 
 export interface TxnConfig {

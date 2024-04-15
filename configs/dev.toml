@@ -3,6 +3,7 @@ quoteToken = "SOL"
 dbConnectionStr = ""
 summaryLoggingInterval = 10
 dryRun = true
+priceSampleInterval = 3
 
 [txn]
 skipPreflight = true
@@ -32,7 +33,7 @@ takeProfitPercentage = 60
 takeProfitSellPercentage = 100
 stopLossPercentage = 25
 stopLossSellPercentage = 100
-hardCashOutTimeSec = 27
+hardCashOutTimeSec = 30
 buySlippage = 0
 buyFeeMicroLamports = 50000000
 sellSlippage = 0

@@ -163,11 +163,10 @@ export class DefaultSnipingTask implements SnipingTask {
   }
 
   private async samplePrice(now: number) {
-    // Only sample per second.
-    // TODO: make this configurable.
     if (
       this.priceSamples.length > 0 &&
-      now - this.priceSamples[0].timestamp < 5
+      now - this.priceSamples[this.priceSamples.length - 1].timestamp <
+        sniperConfig.general.priceSampleInterval
     ) {
       return;
     }

@@ -153,5 +153,6 @@ export class DefaultSnipingTaskDispatcher implements SnipingTaskDispatcher {
       );
       await sleep(sniperConfig.general.activeTasksPollingInterval * 1000);
     }
+    process.exit(0);
   }
 }

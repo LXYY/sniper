@@ -17,7 +17,6 @@ async function main() {
   // Handle SIGINT and SIGTERM gracefully.
   async function cleanup() {
     await dispatcher.stop();
-    process.exit(0);
   }
 
   process.on("SIGINT", () => {

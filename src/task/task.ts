@@ -355,7 +355,7 @@ export class DefaultSnipingTask implements SnipingTask {
       priceSamples: this.priceSamples,
       txnSignatures: this.txnSignatures,
       buyInPrice: this.buyInPrice.toFixed(10),
-      initialCashOutPrice: this.initialCashOutPrice.toFixed(10),
+      initialCashOutPrice: this.initialCashOutPrice?.toFixed(10),
       finalCashOutPrice: this.finalCashOutPrice?.toFixed(10),
     };
   }

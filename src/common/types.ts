@@ -19,6 +19,8 @@ export interface PoolCreation {
   baseToken: SplToken;
   quoteToken: SplToken;
   marketCreator: PublicKey;
+  marketCreatedAtTimestamp: number;
+  marketCreatedBeforeSec: number;
 }
 
 export interface MarketCreation {

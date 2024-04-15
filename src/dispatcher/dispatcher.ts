@@ -8,10 +8,11 @@ import { DefaultSnipingTask } from "../task/task";
 import { SnipingCriteria } from "../task/sniping_criteria";
 import { TokenSwapper, TokenSwapperFactory } from "../trade/swapper";
 import { SnipingAnalyticalService } from "../analytical/sniping_analytical_service";
-import { inspect } from "../common/utils";
+import { inspect, sleep } from "../common/utils";
 import Decimal from "decimal.js";
 import { SnipingPerformanceModel } from "../analytical/types";
 import { fromQuoteToken, toQuoteToken } from "../common/spl_token";
+import sniperConfig from "../common/config";
 
 export interface SnipingTaskDispatcher {
   start(): Promise<void>;
@@ -29,6 +30,7 @@ export class DefaultSnipingTaskDispatcher implements SnipingTaskDispatcher {
   private readonly snipingCriteria: SnipingCriteria;
   private readonly tokenSwapperFactory: TokenSwapperFactory;
   private readonly snipingAnalyticalService: SnipingAnalyticalService;
+  private readonly activeTaskPoolIds: Set<string>;
   private cleanupStarted: boolean;
 
   constructor(opts: DispatcherOptions) {
@@ -38,6 +40,7 @@ export class DefaultSnipingTaskDispatcher implements SnipingTaskDispatcher {
     this.tokenSwapperFactory = opts.tokenSwapperFactory;
     this.snipingAnalyticalService = opts.snipingAnalyticalService;
     this.cleanupStarted = false;
+    this.activeTaskPoolIds = new Set<string>();
     this.eventSource.onPoolCreation(async (poolCreation) => {
       await this.dispatchSnipingTask(poolCreation);
     });
@@ -65,10 +68,12 @@ export class DefaultSnipingTaskDispatcher implements SnipingTaskDispatcher {
     task.onTaskFinalization(async (summary) => {
       await this.finalizeTask(summary);
     });
+    this.activeTaskPoolIds.add(poolCreation.poolId.toBase58());
     setImmediate(() => task.run());
   }
 
   async finalizeTask(summary: TaskSummary): Promise<void> {
+    this.activeTaskPoolIds.delete(summary.poolId.toString());
     this.printTaskSummary(summary);
     await this.snipingAnalyticalService.recordSnipingTaskSummary(summary);
     this.printPerformance(
@@ -136,9 +141,17 @@ export class DefaultSnipingTaskDispatcher implements SnipingTaskDispatcher {
     }
     console.log("cleaning up...");
     this.cleanupStarted = true;
+
     const performance =
       await this.snipingAnalyticalService.getSnipingPerformance();
     this.printPerformance(performance);
     await this.eventSource.stop();
+
+    while (this.activeTaskPoolIds.size > 0) {
+      console.log(
+        `still waiting for ${this.activeTaskPoolIds.size} tasks to finish...`,
+      );
+      await sleep(sniperConfig.general.activeTasksPollingInterval * 1000);
+    }
   }
 }

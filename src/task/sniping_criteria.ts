@@ -48,6 +48,12 @@ export class RaydiumV4SnipingCriteria implements SnipingCriteria {
     const { liquidityState, baseTokenMint, baseVault, quoteVault } =
       await this.getTokenStatesForSnipingCriteria(input);
 
+    const poolOpenTime = liquidityState.poolOpenTime.toNumber();
+    const now = Date.now() / 1000;
+    if (now < poolOpenTime) {
+      throw new ErrSnipingCriteriaNotMet(`Pool has timer.`);
+    }
+
     if (poolConfig.requireMintDisabled && !!baseTokenMint.mintAuthority) {
       throw new ErrSnipingCriteriaNotMet(`Base token mint not disabled.`);
     }
@@ -68,7 +74,13 @@ export class RaydiumV4SnipingCriteria implements SnipingCriteria {
       initialQuoteUiAmount.lt(poolConfig.minQuoteTokenInPool) ||
       initialQuoteUiAmount.gt(poolConfig.maxQuoteTokenInPool)
     ) {
-      throw new ErrSnipingCriteriaNotMet(`Quote token amount not in range.`);
+      throw new ErrSnipingCriteriaNotMet(
+        `Quote token amount not in range. Details:\n` +
+          `current amount: ${rawAmountToDecimal(new BN(quoteVault.amount.toString()), input.quoteToken.decimals).toFixed(2)}\n` +
+          `swap out: ${rawAmountToDecimal(liquidityState.swapQuoteOutAmount, input.quoteToken.decimals).toFixed(2)}\n` +
+          `swap in: ${rawAmountToDecimal(liquidityState.swapQuoteInAmount, input.quoteToken.decimals).toFixed(2)}\n` +
+          `calculated initial amount (current + swap_out - swap_in): ${initialQuoteUiAmount.toFixed(2)}`,
+      );
     }
 
     // Check base token pool percentage.

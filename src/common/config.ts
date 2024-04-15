@@ -29,6 +29,7 @@ export interface GeneralConfig {
   summaryLoggingInterval: number;
   dryRun: boolean;
   priceSampleInterval: number;
+  activeTasksPollingInterval: number;
 }
 
 export interface TxnConfig {

@@ -36,6 +36,9 @@ export function getPoolCreationFromRaydiumV4(
     baseToken: marketCreation.baseToken,
     quoteToken: marketCreation.quoteToken,
     marketCreator: marketCreation.creator,
+    marketCreatedAtTimestamp: marketCreation.createdAtTimestamp,
+    marketCreatedBeforeSec:
+      Date.now() / 1000 - marketCreation.createdAtTimestamp,
   };
 }
 

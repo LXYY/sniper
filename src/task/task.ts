@@ -20,6 +20,7 @@ import {
   TokenSwapper,
 } from "../trade/swapper";
 import Decimal from "decimal.js";
+import { RaydiumV4Swapper } from "../trade/raydium_v4_swapper";
 
 export interface SnipingTask {
   run(): Promise<void>;
@@ -387,4 +388,12 @@ export class DefaultSnipingTask implements SnipingTask {
     }
     return taskError;
   }
+}
+
+export type SnipingTaskFactory = (input: SnipingTaskInput) => SnipingTask;
+
+export function defaultSnipingTaskFactory(
+  input: SnipingTaskInput,
+): SnipingTask {
+  return new DefaultSnipingTask(input);
 }

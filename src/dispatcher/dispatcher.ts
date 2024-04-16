@@ -4,7 +4,7 @@ import { DispatcherOptions } from "./types";
 import { PoolCreationEventSource } from "../event_source/event_source";
 import { TaskSummary } from "../task/types";
 import { CreatorBlacklist } from "./creator_blacklist";
-import { DefaultSnipingTask } from "../task/task";
+import { DefaultSnipingTask, SnipingTaskFactory } from "../task/task";
 import { SnipingCriteria } from "../task/sniping_criteria";
 import { TokenSwapper, TokenSwapperFactory } from "../trade/swapper";
 import { SnipingAnalyticalService } from "../analytical/sniping_analytical_service";
@@ -29,6 +29,7 @@ export class DefaultSnipingTaskDispatcher implements SnipingTaskDispatcher {
   private creatorBlacklist: CreatorBlacklist;
   private readonly snipingCriteria: SnipingCriteria;
   private readonly tokenSwapperFactory: TokenSwapperFactory;
+  private readonly snipingTaskFactory: SnipingTaskFactory;
   private readonly snipingAnalyticalService: SnipingAnalyticalService;
   private readonly activeTaskPoolIds: Set<string>;
   private cleanupStarted: boolean;
@@ -38,6 +39,7 @@ export class DefaultSnipingTaskDispatcher implements SnipingTaskDispatcher {
     this.creatorBlacklist = opts.creatorBlacklist;
     this.snipingCriteria = opts.snipingCriteria;
     this.tokenSwapperFactory = opts.tokenSwapperFactory;
+    this.snipingTaskFactory = opts.snipingTaskFactory;
     this.snipingAnalyticalService = opts.snipingAnalyticalService;
     this.cleanupStarted = false;
     this.activeTaskPoolIds = new Set<string>();
@@ -56,7 +58,7 @@ export class DefaultSnipingTaskDispatcher implements SnipingTaskDispatcher {
     console.log(
       `Dispatching sniping task for pool update: ${inspect(poolCreation)}`,
     );
-    const task = new DefaultSnipingTask({
+    const task = this.snipingTaskFactory({
       poolCreation,
       snipingCriteria: this.snipingCriteria,
       tokenSwapper: this.tokenSwapperFactory(

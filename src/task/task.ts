@@ -206,11 +206,11 @@ export class DefaultSnipingTask implements SnipingTask {
       takeProfitAmount,
       strategyConfig.sellSlippage,
     );
-    const averagePrice = new Decimal(quote.minAmountOut.toString()).div(
-      takeProfitAmount.toString(),
-    );
-    const unrealizedRoi =
-      this.positionManager.getUnrealizedRoi(averagePrice) * 100;
+    // const price = new Decimal(quote.minAmountOut.toString()).div(
+    //   takeProfitAmount.toString(),
+    // );
+    const price = new Decimal(quote.baseTokenPrice.toString());
+    const unrealizedRoi = this.positionManager.getUnrealizedRoi(price) * 100;
     if (unrealizedRoi < strategyConfig.takeProfitPercentage) {
       return false;
     }

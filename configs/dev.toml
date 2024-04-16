@@ -38,13 +38,13 @@ stopLossPercentage = 50
 stopLossSellPercentage = 100
 hardCashOutTimeSec = 30
 buySlippage = 50
-buyFeeMicroLamports = 50000000
-sellSlippage = 25
-sellFeeMicroLamports = 50000000
-quoteTokenBuyInPercentage = 10
-minQuoteTokenIn = 0.25
+buyFeeMicroLamports = 5000000
+sellSlippage = 50
+sellFeeMicroLamports = 5000000
+quoteTokenBuyInPercentage = 2
+minQuoteTokenIn = 0.1
 maxQuoteTokenIn = 0.5
-quoteTickIntervalMs = 100
+quoteTickIntervalMs = 50
 
 [spam]
 enabled = true

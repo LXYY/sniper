@@ -24,22 +24,16 @@ export interface SwapOptions {
 }
 
 export interface Quote {
-  minOutAmount: BN;
+  amountIn: BN;
+  minAmountOut: BN;
   baseTokenPrice: Decimal;
+  protocolSpecificPayload: any;
 }
 
 export interface TokenSwapper {
-  buyToken(
-    buyAmount: BN,
-    minExpectedAmount?: BN,
-    opts?: SwapOptions,
-  ): Promise<SwapSummary>;
+  buyToken(quote: Quote, opts?: SwapOptions): Promise<SwapSummary>;
 
-  sellToken(
-    sellAmount: BN,
-    minExpectedAmount?: BN,
-    opts?: SwapOptions,
-  ): Promise<SwapSummary>;
+  sellToken(quote: Quote, opts?: SwapOptions): Promise<SwapSummary>;
 
   getBuyQuote(buyAmount: BN, slippage: number): Promise<Quote>;
 

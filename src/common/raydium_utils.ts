@@ -1,21 +1,34 @@
 import {
   ApiPoolInfoV4,
+  buildSimpleTransaction,
   jsonInfo2PoolKeys,
   Liquidity,
   LIQUIDITY_STATE_LAYOUT_V4,
   LiquidityPoolKeys,
   LiquidityStateV4,
+  LOOKUP_TABLE_CACHE,
   MAINNET_PROGRAM_ID,
   Market,
   MARKET_STATE_LAYOUT_V3,
   Token,
   TOKEN_PROGRAM_ID,
+  TokenAmount,
+  TxVersion,
 } from "@raydium-io/raydium-sdk";
 import { MarketCreation, PoolCreation, PoolType } from "./types";
 import splToken from "@solana/spl-token";
 import solConnection from "./sol_connection";
-import { Connection, PublicKey } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  Transaction,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { SplToken } from "./spl_token";
+import BN from "bn.js";
+import { sniperPayer } from "./payer";
+
+export const RAYDIUM_SWAP_TXN_COMPUTE_UNIT_LIMIT = 100000;
 
 export function getRaydiumV4LiquidityStateFromData(
   data: Buffer,
@@ -112,4 +125,54 @@ export function toRaydiumToken(splToken: SplToken): Token {
     splToken.symbol,
     splToken.name,
   );
+}
+
+export interface RaydiumV4SwapTransactionInput {
+  poolKeys: LiquidityPoolKeys;
+  tokenIn: SplToken;
+  tokenOut: SplToken;
+  amountIn: BN;
+  minAmountOut: BN;
+  payer: PublicKey;
+  priorityFeeMicroLamports: number;
+}
+
+export async function getSwapTransaction(
+  input: RaydiumV4SwapTransactionInput,
+): Promise<VersionedTransaction> {
+  const tokenIn = toRaydiumToken(input.tokenIn);
+  const tokenOut = toRaydiumToken(input.tokenOut);
+
+  const { innerTransactions } = await Liquidity.makeSwapInstructionSimple({
+    connection: solConnection,
+    poolKeys: input.poolKeys,
+    userKeys: {
+      tokenAccounts: [],
+      owner: input.payer,
+    },
+    amountIn: new TokenAmount(tokenIn, input.amountIn),
+    amountOut: new TokenAmount(tokenOut, input.minAmountOut),
+    fixedSide: "in",
+    makeTxVersion: TxVersion.V0,
+    computeBudgetConfig: {
+      units: RAYDIUM_SWAP_TXN_COMPUTE_UNIT_LIMIT,
+      microLamports: input.priorityFeeMicroLamports,
+    },
+    config: {
+      checkCreateATAOwner: false,
+    },
+  });
+
+  const latestBlockhash =
+    await solConnection.getLatestBlockhashAndContext("processed");
+  const txnToSend = await buildSimpleTransaction({
+    connection: solConnection,
+    makeTxVersion: TxVersion.V0,
+    payer: input.payer,
+    innerTransactions: innerTransactions,
+    addLookupTableInfo: LOOKUP_TABLE_CACHE,
+    recentBlockhash: latestBlockhash.value.blockhash,
+  });
+
+  return txnToSend[0] as VersionedTransaction;
 }

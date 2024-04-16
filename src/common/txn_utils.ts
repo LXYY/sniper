@@ -6,9 +6,11 @@ import {
   PublicKey,
   RpcResponseAndContext,
   SignatureResult,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import solConnection from "./sol_connection";
 import { sleep } from "./utils";
+import { sniperPayer } from "./payer";
 
 export async function confirmAndGetTransaction(signature: string) {
   const latestBlockHash = await backOff(() =>
@@ -83,4 +85,45 @@ export function programInvokedFromLogs(
     }
   }
   return false;
+}
+
+export async function sendAndConfirmTransaction(
+  txn: VersionedTransaction,
+  skipPreflight: boolean,
+) {
+  txn.sign([sniperPayer]);
+  const txnSignature = await solConnection.sendTransaction(txn, {
+    skipPreflight,
+    preflightCommitment: "processed",
+  });
+  const latestBlockhash =
+    await solConnection.getLatestBlockhashAndContext("processed");
+  const result = await solConnection.confirmTransaction(
+    {
+      signature: txnSignature,
+      blockhash: latestBlockhash.value.blockhash,
+      lastValidBlockHeight: latestBlockhash.value.lastValidBlockHeight,
+    },
+    "confirmed",
+  );
+  if (result.value.err) {
+    throw new Error("transaction failed: " + result.value.err);
+  }
+
+  return await backOff(
+    async () => {
+      const txn = await solConnection.getParsedTransaction(txnSignature, {
+        commitment: "confirmed",
+        maxSupportedTransactionVersion: 0,
+      });
+      // The txn may be null.
+      if (!txn) {
+        throw new Error("transaction not found, retrying");
+      }
+      return txn;
+    },
+    {
+      jitter: "none",
+    },
+  );
 }

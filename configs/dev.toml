@@ -2,7 +2,7 @@
 quoteToken = "SOL"
 dbConnectionStr = ""
 summaryLoggingInterval = 10
-dryRun = true
+dryRun = false
 priceSampleInterval = 3
 activeTasksPollingInterval = 5
 
@@ -36,11 +36,11 @@ takeProfitSellPercentage = 100
 stopLossPercentage = 50
 stopLossSellPercentage = 100
 hardCashOutTimeSec = 30
-buySlippage = 0
-buyFeeMicroLamports = 50000000
-sellSlippage = 0
-sellFeeMicroLamports = 50000000
+buySlippage = 25
+buyFeeMicroLamports = 5000000
+sellSlippage = 15
+sellFeeMicroLamports = 1000000
 quoteTokenBuyInPercentage = 1
-minQuoteTokenIn = 0.1
-maxQuoteTokenIn = 0.5
+minQuoteTokenIn = 0.05
+maxQuoteTokenIn = 0.1
 quoteTickIntervalMs = 100

@@ -4,8 +4,8 @@ import { SnipingCriteria } from "./sniping_criteria";
 import { ErrRuntimeError, TaskError } from "./errors";
 import BN from "bn.js";
 import {
-  PositionManager,
   DefaultPositionManager,
+  PositionManager,
 } from "../trade/position_manager";
 import sniperConfig from "../common/config";
 import { PublicKey } from "@solana/web3.js";
@@ -13,7 +13,12 @@ import { getAccount } from "@solana/spl-token";
 import solConnection from "../common/sol_connection";
 import { sleep, uiAmountToBN } from "../common/utils";
 import { SplToken } from "../common/spl_token";
-import { SwapSummary, SwapTxnType, TokenSwapper } from "../trade/swapper";
+import {
+  SwapOptions,
+  SwapSummary,
+  SwapTxnType,
+  TokenSwapper,
+} from "../trade/swapper";
 import Decimal from "decimal.js";
 
 export interface SnipingTask {
@@ -120,17 +125,30 @@ export class DefaultSnipingTask implements SnipingTask {
     return quoteAmountByPercentage;
   }
 
+  private getDefaultSwapOptions(swapType: SwapTxnType): SwapOptions {
+    const options: SwapOptions = {
+      skipPreflight: false,
+      priorityFeeInMicroLamports:
+        swapType === SwapTxnType.BUY
+          ? sniperConfig.strategy.buyFeeMicroLamports
+          : sniperConfig.strategy.sellFeeMicroLamports,
+    };
+    if (sniperConfig.general.sendTxnRetries > 0) {
+      options.maxRetries = sniperConfig.general.sendTxnRetries;
+    }
+    return options;
+  }
+
   private async buyIn() {
     const buyInAmount = await this.getBuyInAmount();
     const slippage = sniperConfig.strategy.buySlippage;
     const quote = await this.tokenSwapper.getBuyQuote(buyInAmount, slippage);
-    this.buyInTimestamp = Date.now() / 1000;
-    const buyInSummary = await this.tokenSwapper.buyToken(quote, {
-      skipPreflight: false,
-      priorityFeeInMicroLamports: sniperConfig.strategy.buyFeeMicroLamports,
-    });
-    this.buyInTimestamp = Date.now() / 1000;
-    this.buyInPrice = quote.baseTokenPrice;
+    const buyInSummary = await this.tokenSwapper.buyToken(
+      quote,
+      this.getDefaultSwapOptions(SwapTxnType.BUY),
+    );
+    this.buyInTimestamp = buyInSummary.blockTimestamp;
+    this.buyInPrice = this.getExecutionPriceFromSummary(buyInSummary);
     this.updatePosition(buyInSummary);
   }
 
@@ -195,11 +213,11 @@ export class DefaultSnipingTask implements SnipingTask {
     if (unrealizedRoi < strategyConfig.takeProfitPercentage) {
       return false;
     }
-    const swapSummary = await this.tokenSwapper.sellToken(quote, {
-      skipPreflight: false,
-      priorityFeeInMicroLamports: sniperConfig.strategy.sellFeeMicroLamports,
-    });
-    this.initialCashOutPrice = quote.baseTokenPrice;
+    const swapSummary = await this.tokenSwapper.sellToken(
+      quote,
+      this.getDefaultSwapOptions(SwapTxnType.SELL),
+    );
+    this.initialCashOutPrice = this.getExecutionPriceFromSummary(swapSummary);
     this.updatePosition(swapSummary);
     return true;
   }
@@ -226,10 +244,10 @@ export class DefaultSnipingTask implements SnipingTask {
     if (unrealizedRoi > -strategyConfig.stopLossPercentage) {
       return false;
     }
-    const swapSummary = await this.tokenSwapper.sellToken(quote, {
-      skipPreflight: false,
-      priorityFeeInMicroLamports: sniperConfig.strategy.sellFeeMicroLamports,
-    });
+    const swapSummary = await this.tokenSwapper.sellToken(
+      quote,
+      this.getDefaultSwapOptions(SwapTxnType.SELL),
+    );
     this.initialCashOutPrice = quote.baseTokenPrice;
     this.updatePosition(swapSummary);
     return true;
@@ -240,7 +258,14 @@ export class DefaultSnipingTask implements SnipingTask {
     if (timeToSleep > 0) {
       await sleep(timeToSleep * 1000);
     }
-    await this.sellAll();
+    while (true) {
+      try {
+        await this.sellAll();
+        return;
+      } catch (error) {
+        console.error(`Error during hard cash out: ${error}, retrying...`);
+      }
+    }
   }
 
   private async sellAll() {
@@ -254,11 +279,11 @@ export class DefaultSnipingTask implements SnipingTask {
       position,
       sniperConfig.strategy.sellSlippage,
     );
-    const swapSummary = await this.tokenSwapper.sellToken(quote, {
-      skipPreflight: false,
-      priorityFeeInMicroLamports: sniperConfig.strategy.sellFeeMicroLamports,
-    });
-    this.finalCashOutPrice = quote.baseTokenPrice;
+    const swapSummary = await this.tokenSwapper.sellToken(
+      quote,
+      this.getDefaultSwapOptions(SwapTxnType.SELL),
+    );
+    this.finalCashOutPrice = this.getExecutionPriceFromSummary(swapSummary);
     this.updatePosition(swapSummary);
   }
 
@@ -341,6 +366,16 @@ export class DefaultSnipingTask implements SnipingTask {
       initialCashOutPrice: this.initialCashOutPrice?.toFixed(10),
       finalCashOutPrice: this.finalCashOutPrice?.toFixed(10),
     };
+  }
+
+  private getExecutionPriceFromSummary(summary: SwapSummary): Decimal {
+    const deltaBaseAmount = new Decimal(summary.preBaseTokenAmount.toString())
+      .sub(summary.postBaseTokenAmount.toString())
+      .abs();
+    const deltaQuoteAmount = new Decimal(summary.preQuoteTokenAmount.toString())
+      .sub(summary.postQuoteTokenAmount.toString())
+      .abs();
+    return deltaQuoteAmount.div(deltaBaseAmount);
   }
 
   private getTaskError(error: Error): TaskError {

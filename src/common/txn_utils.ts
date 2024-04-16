@@ -90,22 +90,26 @@ export function programInvokedFromLogs(
 export async function sendAndConfirmTransaction(
   txn: VersionedTransaction,
   skipPreflight: boolean,
+  maxRetries?: number,
 ) {
   txn.sign([sniperPayer]);
   const txnSignature = await solConnection.sendTransaction(txn, {
     skipPreflight,
+    maxRetries,
     preflightCommitment: "processed",
   });
   const latestBlockhash =
     await solConnection.getLatestBlockhashAndContext("processed");
+  console.log(`starting slot: ${latestBlockhash.context.slot}`);
   const result = await solConnection.confirmTransaction(
     {
       signature: txnSignature,
       blockhash: latestBlockhash.value.blockhash,
       lastValidBlockHeight: latestBlockhash.value.lastValidBlockHeight,
     },
-    "confirmed",
+    "processed",
   );
+  console.log(`processed slot: ${result.context.slot}`);
   if (result.value.err) {
     throw new Error("transaction failed: " + result.value.err);
   }
@@ -120,6 +124,7 @@ export async function sendAndConfirmTransaction(
       if (!txn) {
         throw new Error("transaction not found, retrying");
       }
+      console.log(`confirmed slot: ${txn.slot}`);
       return txn;
     },
     {

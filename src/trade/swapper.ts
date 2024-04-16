@@ -12,6 +12,7 @@ export enum SwapTxnType {
 export interface SwapSummary {
   txnSignature: string;
   txnType: SwapTxnType;
+  blockTimestamp: number;
   preBaseTokenAmount: BN;
   postBaseTokenAmount: BN;
   preQuoteTokenAmount: BN;
@@ -20,6 +21,7 @@ export interface SwapSummary {
 
 export interface SwapOptions {
   skipPreflight: boolean;
+  maxRetries?: number;
   priorityFeeInMicroLamports: number;
 }
 

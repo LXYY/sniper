@@ -5,6 +5,7 @@ summaryLoggingInterval = 10
 dryRun = false
 priceSampleInterval = 3
 activeTasksPollingInterval = 5
+sendTxnRetries = 3
 
 [txn]
 skipPreflight = true
@@ -39,7 +40,7 @@ hardCashOutTimeSec = 30
 buySlippage = 25
 buyFeeMicroLamports = 5000000
 sellSlippage = 15
-sellFeeMicroLamports = 1000000
+sellFeeMicroLamports = 5000000
 quoteTokenBuyInPercentage = 1
 minQuoteTokenIn = 0.05
 maxQuoteTokenIn = 0.1

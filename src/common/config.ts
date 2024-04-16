@@ -30,6 +30,7 @@ export interface GeneralConfig {
   dryRun: boolean;
   priceSampleInterval: number;
   activeTasksPollingInterval: number;
+  sendTxnRetries: number;
 }
 
 export interface TxnConfig {

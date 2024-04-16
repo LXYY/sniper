@@ -187,6 +187,7 @@ export class RaydiumV4Swapper implements TokenSwapper {
     const txnType =
       tokenIn === this.quoteToken ? SwapTxnType.BUY : SwapTxnType.SELL;
     const txnSignature = txn.transaction.signatures[0];
+    const blockTimestamp = txn.blockTime;
 
     let preQuoteTokenAmount: BN;
     let postQuoteTokenAmount: BN;
@@ -220,6 +221,7 @@ export class RaydiumV4Swapper implements TokenSwapper {
     return {
       txnSignature,
       txnType,
+      blockTimestamp,
       preBaseTokenAmount,
       postBaseTokenAmount,
       preQuoteTokenAmount,

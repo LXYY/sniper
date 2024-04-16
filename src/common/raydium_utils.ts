@@ -159,7 +159,7 @@ export async function getSwapTransaction(
       microLamports: input.priorityFeeMicroLamports,
     },
     config: {
-      checkCreateATAOwner: false,
+      checkCreateATAOwner: true,
     },
   });
 

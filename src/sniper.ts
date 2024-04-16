@@ -72,28 +72,28 @@ async function testSwapper() {
 async function main() {
   console.log(inspect(sniperConfig));
 
-  await testSwapper();
+  // await testSwapper();
 
-  // // Handle SIGINT and SIGTERM gracefully.
-  // async function cleanup() {
-  //   await dispatcher.stop();
-  // }
-  //
-  // process.on("SIGINT", () => {
-  //   cleanup();
-  // });
-  // process.on("SIGTERM", () => {
-  //   cleanup();
-  // });
-  //
-  // const dispatcher = new DefaultSnipingTaskDispatcher({
-  //   poolCreationEventSource: new RaydiumPoolCreationEventSource(),
-  //   creatorBlacklist: new InMemoryCreatorBlacklist(),
-  //   snipingCriteria: new RaydiumV4SnipingCriteria(),
-  //   tokenSwapperFactory: raydiumV4SwapperFactory,
-  //   snipingAnalyticalService: new InMemorySnipingAnalyticalService(),
-  // });
-  // await dispatcher.start();
+  // Handle SIGINT and SIGTERM gracefully.
+  async function cleanup() {
+    await dispatcher.stop();
+  }
+
+  process.on("SIGINT", () => {
+    cleanup();
+  });
+  process.on("SIGTERM", () => {
+    cleanup();
+  });
+
+  const dispatcher = new DefaultSnipingTaskDispatcher({
+    poolCreationEventSource: new RaydiumPoolCreationEventSource(),
+    creatorBlacklist: new InMemoryCreatorBlacklist(),
+    snipingCriteria: new RaydiumV4SnipingCriteria(),
+    tokenSwapperFactory: raydiumV4SwapperFactory,
+    snipingAnalyticalService: new InMemorySnipingAnalyticalService(),
+  });
+  await dispatcher.start();
 }
 
 main();

@@ -3,6 +3,7 @@ quoteToken = "SOL"
 dbConnectionStr = ""
 summaryLoggingInterval = 10
 dryRun = false
+oneShotMode = true
 priceSampleInterval = 3
 activeTasksPollingInterval = 5
 sendTxnRetries = 0
@@ -40,7 +41,7 @@ hardCashOutTimeSec = 15
 buySlippage = 50
 buyFeeMicroLamports = 5000000
 sellSlippage = 50
-sellFeeMicroLamports = 5000000
+sellFeeMicroLamports = 100000
 quoteTokenBuyInPercentage = 2
 minQuoteTokenIn = 0.1
 maxQuoteTokenIn = 0.5
@@ -48,4 +49,7 @@ quoteTickIntervalMs = 50
 
 [spam]
 enabled = true
-spamIntervalMs = 300
+intervalMs = 400
+timeoutSec = 180
+buyInAmount = 0.1
+numCashOutTxns = 60

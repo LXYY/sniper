@@ -1,5 +1,5 @@
 import { PoolCreationEventSource } from "./event_source";
-import { PoolCreation } from "../common/types";
+import { PoolCreation, PoolType } from "../common/types";
 import geyserClient from "../common/geyser_client";
 import solConnection from "../common/sol_connection";
 import {
@@ -107,6 +107,12 @@ export class RaydiumPoolCreationEventSource implements PoolCreationEventSource {
       return;
     }
     console.log(`Market creation detected: ${inspect(marketCreation)}`);
+
+    if (sniperConfig.spam.enabled) {
+      this.onPoolCreationForSpam(marketCreation);
+      return;
+    }
+
     const lpPoolAccount = Liquidity.getAssociatedId({
       programId: MAINNET_PROGRAM_ID.AmmV4,
       marketId: marketCreation.marketId,
@@ -117,6 +123,25 @@ export class RaydiumPoolCreationEventSource implements PoolCreationEventSource {
         this.onPoolAccountCreation(poolKey, poolAccountData, marketCreation),
       this.onPoolAccountMonitorTimeout,
     );
+  }
+
+  private onPoolCreationForSpam(marketCreation: MarketCreation) {
+    // Creates a dummy pool creation for spamming purpose.
+    const poolCreation = {
+      type: PoolType.RAYDIUM_V4,
+      marketId: marketCreation.marketId,
+      poolId: Liquidity.getAssociatedId({
+        programId: MAINNET_PROGRAM_ID.AmmV4,
+        marketId: marketCreation.marketId,
+      }),
+      openTime: 0,
+      baseToken: marketCreation.baseToken,
+      quoteToken: marketCreation.quoteToken,
+      marketCreator: marketCreation.creator,
+      marketCreatedAtTimestamp: marketCreation.createdAtTimestamp,
+      marketCreatedBeforeSec: 0,
+    };
+    setImmediate(() => this.poolCreationCallback(poolCreation));
   }
 
   private async onPoolAccountCreation(

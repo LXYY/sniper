@@ -5,6 +5,7 @@ import {
   Liquidity,
   LIQUIDITY_STATE_LAYOUT_V4,
   LiquidityPoolKeys,
+  LiquidityPoolKeysV4,
   LiquidityStateV4,
   LOOKUP_TABLE_CACHE,
   MAINNET_PROGRAM_ID,
@@ -44,6 +45,7 @@ export function getPoolCreationFromRaydiumV4(
   return {
     type: PoolType.RAYDIUM_V4,
     poolId: poolKey,
+    marketId: marketCreation.marketId,
     initialPoolState: liquidityState,
     openTime: liquidityState.poolOpenTime.toNumber(),
     baseToken: marketCreation.baseToken,
@@ -52,6 +54,73 @@ export function getPoolCreationFromRaydiumV4(
     marketCreatedAtTimestamp: marketCreation.createdAtTimestamp,
     marketCreatedBeforeSec:
       Date.now() / 1000 - marketCreation.createdAtTimestamp,
+  };
+}
+
+export async function getPoolKeysFromMarketId(
+  marketId: PublicKey,
+  baseTokenDecimals: number,
+  quoteTokenDecimals: number,
+): Promise<LiquidityPoolKeysV4> {
+  const marketAccount = await solConnection.getAccountInfo(marketId);
+  const marketInfo = MARKET_STATE_LAYOUT_V3.decode(marketAccount!.data);
+  const programId = MAINNET_PROGRAM_ID.AmmV4;
+  return {
+    id: Liquidity.getAssociatedId({
+      programId,
+      marketId,
+    }),
+    baseMint: marketInfo.baseMint,
+    quoteMint: marketInfo.quoteMint,
+    lpMint: Liquidity.getAssociatedLpMint({
+      programId,
+      marketId,
+    }),
+    baseDecimals: baseTokenDecimals,
+    quoteDecimals: quoteTokenDecimals,
+    lpDecimals: baseTokenDecimals,
+    version: 4,
+    programId: programId,
+    authority: Liquidity.getAssociatedAuthority({
+      programId: programId,
+    }).publicKey,
+    openOrders: Liquidity.getAssociatedOpenOrders({
+      programId,
+      marketId,
+    }),
+    targetOrders: Liquidity.getAssociatedTargetOrders({
+      programId,
+      marketId,
+    }),
+    baseVault: Liquidity.getAssociatedBaseVault({
+      programId,
+      marketId,
+    }),
+    quoteVault: Liquidity.getAssociatedQuoteVault({
+      programId,
+      marketId,
+    }),
+    withdrawQueue: Liquidity.getAssociatedWithdrawQueue({
+      programId,
+      marketId,
+    }),
+    lpVault: Liquidity.getAssociatedLpVault({
+      programId,
+      marketId,
+    }),
+    marketVersion: 3,
+    marketProgramId: MAINNET_PROGRAM_ID.OPENBOOK_MARKET,
+    marketId: marketId,
+    marketAuthority: Market.getAssociatedAuthority({
+      programId: MAINNET_PROGRAM_ID.OPENBOOK_MARKET,
+      marketId: marketId,
+    }).publicKey,
+    marketBaseVault: marketInfo.baseVault,
+    marketQuoteVault: marketInfo.quoteVault,
+    marketBids: marketInfo.bids,
+    marketAsks: marketInfo.asks,
+    marketEventQueue: marketInfo.eventQueue,
+    lookupTableAccount: PublicKey.default,
   };
 }
 

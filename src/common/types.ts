@@ -14,6 +14,7 @@ export enum PoolType {
 export interface PoolCreation {
   type: PoolType;
   poolId: PublicKey;
+  marketId: PublicKey;
   initialPoolState?: LiquidityStateV4;
   openTime: number;
   baseToken: SplToken;

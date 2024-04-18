@@ -21,6 +21,11 @@ import {
 } from "../trade/swapper";
 import Decimal from "decimal.js";
 import { RaydiumV4Swapper } from "../trade/raydium_v4_swapper";
+import {
+  getExecutionPriceFromSummary,
+  getSnipingCriteriaInput,
+  getTaskSummaryFromError,
+} from "./utils";
 
 export interface SnipingTask {
   run(): Promise<void>;
@@ -46,6 +51,7 @@ export class DefaultSnipingTask implements SnipingTask {
   private buyInPrice?: Decimal;
   private initialCashOutPrice?: Decimal;
   private finalCashOutPrice?: Decimal;
+  private marketId: PublicKey;
   private taskFinalizationCallback: (summary: TaskSummary) => Promise<void>;
 
   constructor(input: SnipingTaskInput) {
@@ -81,7 +87,7 @@ export class DefaultSnipingTask implements SnipingTask {
     this.startTimestamp = Date.now() / 1000;
     try {
       await this.snipingCriteria.waitUntilSatisfied(
-        this.getSnipingCriteriaInput(),
+        getSnipingCriteriaInput(this.poolCreation),
       );
       await this.buyIn();
       await this.initialCashOut();
@@ -89,7 +95,7 @@ export class DefaultSnipingTask implements SnipingTask {
       await this.taskFinalizationCallback(this.getTaskSummary());
     } catch (error) {
       await this.taskFinalizationCallback(
-        this.getTaskSummaryFromError(this.getTaskError(error)),
+        getTaskSummaryFromError(error, this.poolCreation),
       );
       return;
     }
@@ -149,7 +155,7 @@ export class DefaultSnipingTask implements SnipingTask {
       this.getDefaultSwapOptions(SwapTxnType.BUY),
     );
     this.buyInTimestamp = buyInSummary.blockTimestamp;
-    this.buyInPrice = this.getExecutionPriceFromSummary(buyInSummary);
+    this.buyInPrice = getExecutionPriceFromSummary(buyInSummary);
     this.updatePosition(buyInSummary);
   }
 
@@ -218,7 +224,7 @@ export class DefaultSnipingTask implements SnipingTask {
       quote,
       this.getDefaultSwapOptions(SwapTxnType.SELL),
     );
-    this.initialCashOutPrice = this.getExecutionPriceFromSummary(swapSummary);
+    this.initialCashOutPrice = getExecutionPriceFromSummary(swapSummary);
     this.updatePosition(swapSummary);
     return true;
   }
@@ -284,7 +290,7 @@ export class DefaultSnipingTask implements SnipingTask {
       quote,
       this.getDefaultSwapOptions(SwapTxnType.SELL),
     );
-    this.finalCashOutPrice = this.getExecutionPriceFromSummary(swapSummary);
+    this.finalCashOutPrice = getExecutionPriceFromSummary(swapSummary);
     this.updatePosition(swapSummary);
   }
 
@@ -317,36 +323,6 @@ export class DefaultSnipingTask implements SnipingTask {
     }
   }
 
-  private getSnipingCriteriaInput(): SnipingCriteriaInput {
-    const initialPoolState = this.poolCreation.initialPoolState;
-    return {
-      poolId: this.poolCreation.poolId,
-      baseToken: this.poolCreation.baseToken,
-      quoteToken: this.poolCreation.quoteToken,
-      baseVault: initialPoolState.baseVault,
-      quoteVault: initialPoolState.quoteVault,
-      lpVault: initialPoolState.lpVault,
-      lpMint: initialPoolState.lpMint,
-    };
-  }
-
-  private getTaskSummaryFromError(error: TaskError): TaskSummary {
-    return {
-      poolId: this.poolCreation.poolId,
-      error,
-      baseToken: this.poolCreation.baseToken,
-      quoteToken: this.poolCreation.quoteToken,
-      snipingStartTime: this.startTimestamp,
-      snipingEndTime: Date.now() / 1000,
-      quoteTokenInAmount: new BN(0),
-      quoteTokenOutAmount: new BN(0),
-      priceSamples: [],
-      txnSignatures: [],
-      buyInPrice: "0",
-      initialCashOutPrice: "0",
-    };
-  }
-
   private getTaskSummary(): TaskSummary {
     return {
       poolId: this.poolCreation.poolId,
@@ -367,26 +343,6 @@ export class DefaultSnipingTask implements SnipingTask {
       initialCashOutPrice: this.initialCashOutPrice?.toFixed(10),
       finalCashOutPrice: this.finalCashOutPrice?.toFixed(10),
     };
-  }
-
-  private getExecutionPriceFromSummary(summary: SwapSummary): Decimal {
-    const deltaBaseAmount = new Decimal(summary.preBaseTokenAmount.toString())
-      .sub(summary.postBaseTokenAmount.toString())
-      .abs();
-    const deltaQuoteAmount = new Decimal(summary.preQuoteTokenAmount.toString())
-      .sub(summary.postQuoteTokenAmount.toString())
-      .abs();
-    return deltaQuoteAmount.div(deltaBaseAmount);
-  }
-
-  private getTaskError(error: Error): TaskError {
-    let taskError: TaskError;
-    if (!(error instanceof TaskError)) {
-      taskError = new ErrRuntimeError(error.message);
-    } else {
-      taskError = error;
-    }
-    return taskError;
   }
 }
 

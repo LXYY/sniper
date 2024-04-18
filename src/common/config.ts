@@ -11,6 +11,7 @@ export interface SniperConfig {
   pool: PoolConfig;
   monitor: MonitorConfig;
   strategy: StrategyConfig;
+  spam: SpamConfig;
 }
 
 /**
@@ -28,6 +29,7 @@ export interface GeneralConfig {
   dbConnectionStr: string;
   summaryLoggingInterval: number;
   dryRun: boolean;
+  oneShotMode: boolean;
   priceSampleInterval: number;
   activeTasksPollingInterval: number;
   sendTxnRetries: number;
@@ -74,6 +76,14 @@ export interface StrategyConfig {
   minQuoteTokenIn: number;
   maxQuoteTokenIn: number;
   quoteTickIntervalMs: number;
+}
+
+export interface SpamConfig {
+  enabled: boolean;
+  intervalMs: number;
+  timeoutSec: number;
+  buyInAmount: number;
+  numCashOutTxns: number;
 }
 
 function parseConfig(configFile: string): SniperConfig {

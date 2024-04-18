@@ -10,6 +10,7 @@ import { SplToken, toQuoteToken } from "../common/spl_token";
 import {
   ParsedTransactionWithMeta,
   PublicKey,
+  Signer,
   TokenBalance,
 } from "@solana/web3.js";
 import {
@@ -80,6 +81,7 @@ export class RaydiumV4Swapper implements TokenSwapper {
             : sniperConfig.strategy.sellFeeMicroLamports,
       };
     }
+    const payer = opts.payer || (sniperPayer as Signer);
     const { poolKeys } =
       quote.protocolSpecificPayload as unknown as RaydiumV4QuotePayload;
     const txn = await getSwapTransaction({
@@ -88,11 +90,15 @@ export class RaydiumV4Swapper implements TokenSwapper {
       tokenOut,
       amountIn: quote.amountIn,
       minAmountOut: quote.minAmountOut,
-      payer: sniperPayer.publicKey,
+      payer: payer.publicKey,
       priorityFeeMicroLamports: opts.priorityFeeInMicroLamports,
     });
-    const parsedTxn = await sendAndConfirmTransaction(txn, opts.skipPreflight);
-    return this.parseSwapSummary(parsedTxn, tokenIn);
+    const parsedTxn = await sendAndConfirmTransaction(
+      txn,
+      opts.skipPreflight,
+      payer,
+    );
+    return this.parseSwapSummary(parsedTxn, tokenIn, payer);
   }
 
   async getBuyQuote(buyAmount: BN, slippage: number): Promise<Quote> {
@@ -166,11 +172,15 @@ export class RaydiumV4Swapper implements TokenSwapper {
     return quoteAmount.div(baseAmount);
   }
 
-  private getTokenBalance(token: SplToken, tokenBalances: TokenBalance[]): BN {
+  private getTokenBalance(
+    token: SplToken,
+    owner: PublicKey,
+    tokenBalances: TokenBalance[],
+  ): BN {
     const baseTokenBalanceIndex = tokenBalances.findIndex((balance) => {
       return (
         balance.mint == token.mintAddress.toBase58() &&
-        balance.owner == sniperPayer.publicKey.toBase58()
+        balance.owner == owner.toBase58()
       );
     });
     if (baseTokenBalanceIndex == -1) {
@@ -182,6 +192,7 @@ export class RaydiumV4Swapper implements TokenSwapper {
   private parseSwapSummary(
     txn: ParsedTransactionWithMeta,
     tokenIn: SplToken,
+    payer: Signer,
   ): SwapSummary {
     const quoteToken = toQuoteToken(this.quoteToken);
     const txnType =
@@ -194,7 +205,7 @@ export class RaydiumV4Swapper implements TokenSwapper {
     if (quoteToken === QuoteToken.SOL) {
       const payerIndex = txn.transaction.message.accountKeys.findIndex(
         (account) => {
-          return sniperPayer.publicKey.equals(account.pubkey);
+          return payer.publicKey.equals(account.pubkey);
         },
       );
       preQuoteTokenAmount = new BN(txn.meta.preBalances[payerIndex]);
@@ -202,19 +213,23 @@ export class RaydiumV4Swapper implements TokenSwapper {
     } else {
       preQuoteTokenAmount = this.getTokenBalance(
         this.quoteToken,
+        payer.publicKey,
         txn.meta.preTokenBalances,
       );
       postQuoteTokenAmount = this.getTokenBalance(
         this.quoteToken,
+        payer.publicKey,
         txn.meta.postTokenBalances,
       );
     }
     const preBaseTokenAmount = this.getTokenBalance(
       this.baseToken,
+      payer.publicKey,
       txn.meta.preTokenBalances,
     );
     const postBaseTokenAmount = this.getTokenBalance(
       this.baseToken,
+      payer.publicKey,
       txn.meta.postTokenBalances,
     );
 

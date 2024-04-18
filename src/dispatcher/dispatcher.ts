@@ -33,6 +33,7 @@ export class DefaultSnipingTaskDispatcher implements SnipingTaskDispatcher {
   private readonly snipingAnalyticalService: SnipingAnalyticalService;
   private readonly activeTaskPoolIds: Set<string>;
   private cleanupStarted: boolean;
+  private dispatchedTask: boolean;
 
   constructor(opts: DispatcherOptions) {
     this.eventSource = opts.poolCreationEventSource;
@@ -43,6 +44,7 @@ export class DefaultSnipingTaskDispatcher implements SnipingTaskDispatcher {
     this.snipingAnalyticalService = opts.snipingAnalyticalService;
     this.cleanupStarted = false;
     this.activeTaskPoolIds = new Set<string>();
+    this.dispatchedTask = false;
     this.eventSource.onPoolCreation(async (poolCreation) => {
       await this.dispatchSnipingTask(poolCreation);
     });
@@ -55,6 +57,13 @@ export class DefaultSnipingTaskDispatcher implements SnipingTaskDispatcher {
       );
       return;
     }
+
+    if (sniperConfig.general.oneShotMode && this.dispatchedTask) {
+      console.log(`Skipping as in one-shot mode only one task is allowed.`);
+      return;
+    }
+
+    this.dispatchedTask = true;
     console.log(
       `Dispatching sniping task for pool update: ${inspect(poolCreation)}`,
     );

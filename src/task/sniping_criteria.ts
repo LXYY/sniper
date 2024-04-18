@@ -3,6 +3,7 @@ import { SnipingCriteriaInput } from "./types";
 import {
   Account,
   getAccount,
+  getMint,
   Mint,
   unpackAccount,
   unpackMint,
@@ -16,6 +17,7 @@ import {
   LIQUIDITY_STATE_LAYOUT_V4,
   LiquidityStateV4,
 } from "@raydium-io/raydium-sdk";
+import Min = Mocha.reporters.Min;
 
 interface TokenStatesForSnipingCriteria {
   liquidityState: LiquidityStateV4;
@@ -41,6 +43,16 @@ export class RaydiumV4SnipingCriteria implements SnipingCriteria {
       throw new ErrSnipingCriteriaNotMet(`Base token symbol required.`);
     }
 
+    // For spam sniping, we only need to check the token mint authorities.
+    if (sniperConfig.spam.enabled) {
+      const baseTokenMint = await getMint(
+        solConnection,
+        input.baseToken.mintAddress,
+      );
+      await this.checkBaseTokenAuthorities(baseTokenMint);
+      return;
+    }
+
     // if (poolConfig.requireImage && !input.baseToken.image) {
     //   throw new ErrSnipingCriteriaNotMet(`Base token image required.`);
     // }
@@ -54,13 +66,7 @@ export class RaydiumV4SnipingCriteria implements SnipingCriteria {
       throw new ErrSnipingCriteriaNotMet(`Pool has timer.`);
     }
 
-    if (poolConfig.requireMintDisabled && !!baseTokenMint.mintAuthority) {
-      throw new ErrSnipingCriteriaNotMet(`Base token mint not disabled.`);
-    }
-
-    if (poolConfig.requireFreezeDisabled && !!baseTokenMint.freezeAuthority) {
-      throw new ErrSnipingCriteriaNotMet(`Base token freeze not disabled.`);
-    }
+    await this.checkBaseTokenAuthorities(baseTokenMint);
 
     const initialQuoteTokenAmount = this.getInitialQuoteTokenAmount(
       liquidityState,
@@ -159,5 +165,21 @@ export class RaydiumV4SnipingCriteria implements SnipingCriteria {
       baseVault,
       quoteVault,
     };
+  }
+
+  private async checkBaseTokenAuthorities(baseTokenMint: Mint) {
+    if (
+      sniperConfig.pool.requireMintDisabled &&
+      !!baseTokenMint.mintAuthority
+    ) {
+      throw new ErrSnipingCriteriaNotMet(`Base token mint not disabled.`);
+    }
+
+    if (
+      sniperConfig.pool.requireFreezeDisabled &&
+      !!baseTokenMint.freezeAuthority
+    ) {
+      throw new ErrSnipingCriteriaNotMet(`Base token freeze not disabled.`);
+    }
   }
 }

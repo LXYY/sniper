@@ -6,11 +6,15 @@ import {
   PublicKey,
   RpcResponseAndContext,
   SignatureResult,
+  Signer,
+  SystemProgram,
+  TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
 import solConnection from "./sol_connection";
 import { sleep } from "./utils";
 import { sniperPayer } from "./payer";
+import BN from "bn.js";
 
 export async function confirmAndGetTransaction(signature: string) {
   const latestBlockHash = await backOff(() =>
@@ -87,12 +91,33 @@ export function programInvokedFromLogs(
   return false;
 }
 
+export async function getSolTransferTransaction(
+  amount: BN,
+  payer: PublicKey,
+  recipient: PublicKey,
+): Promise<VersionedTransaction> {
+  const latestBlockhash = await solConnection.getLatestBlockhash();
+  const messageV0 = new TransactionMessage({
+    payerKey: payer,
+    recentBlockhash: latestBlockhash.blockhash,
+    instructions: [
+      SystemProgram.transfer({
+        fromPubkey: payer,
+        toPubkey: recipient,
+        lamports: BigInt(amount.toString()),
+      }),
+    ],
+  }).compileToV0Message();
+  return new VersionedTransaction(messageV0);
+}
+
 export async function sendAndConfirmTransaction(
   txn: VersionedTransaction,
   skipPreflight: boolean,
+  payer?: Signer,
   maxRetries?: number,
 ) {
-  txn.sign([sniperPayer]);
+  txn.sign([payer || sniperPayer]);
   const txnSignature = await solConnection.sendTransaction(txn, {
     skipPreflight,
     maxRetries,
@@ -100,7 +125,7 @@ export async function sendAndConfirmTransaction(
   });
   const latestBlockhash =
     await solConnection.getLatestBlockhashAndContext("processed");
-  console.log(`starting slot: ${latestBlockhash.context.slot}`);
+  const startingTime = Date.now() / 1000;
   const result = await solConnection.confirmTransaction(
     {
       signature: txnSignature,
@@ -109,7 +134,6 @@ export async function sendAndConfirmTransaction(
     },
     "processed",
   );
-  console.log(`processed slot: ${result.context.slot}`);
   if (result.value.err) {
     throw new Error("transaction failed: " + result.value.err);
   }
@@ -124,11 +148,29 @@ export async function sendAndConfirmTransaction(
       if (!txn) {
         throw new Error("transaction not found, retrying");
       }
-      console.log(`confirmed slot: ${txn.slot}`);
+      console.log(
+        `Transaction ${txnSignature} succeeded after ${(Date.now() / 1000 - startingTime).toFixed(2)} seconds, slot: ${result.context.slot}`,
+      );
       return txn;
     },
     {
       jitter: "none",
     },
   );
+}
+
+export function getSolBalanceChange(
+  parsedTxn: ParsedTransactionWithMeta,
+  account: PublicKey,
+) {
+  const accountIndex = parsedTxn.transaction.message.accountKeys.findIndex(
+    (accountMeta) => accountMeta.pubkey.equals(account),
+  );
+  if (accountIndex < 0) {
+    return new BN(0);
+  }
+
+  const preBalance = parsedTxn.meta.preBalances[accountIndex];
+  const postBalance = parsedTxn.meta.postBalances[accountIndex];
+  return new BN(Math.abs(postBalance - preBalance));
 }

@@ -15,6 +15,7 @@ import { PublicKey } from "@solana/web3.js";
 import { QuoteToken } from "./common/types";
 import BN from "bn.js";
 import { defaultSnipingTaskFactory } from "./task/task";
+import { spamSnipingTaskFactory } from "./task/spam_task";
 
 async function testSwapper() {
   const poolId = new PublicKey("BGS69Ju7DRRVxw9b2B5TnrMLzVdJcscV8UtKywqNsgwx");
@@ -92,7 +93,8 @@ async function main() {
     creatorBlacklist: new InMemoryCreatorBlacklist(),
     snipingCriteria: new RaydiumV4SnipingCriteria(),
     tokenSwapperFactory: raydiumV4SwapperFactory,
-    snipingTaskFactory: defaultSnipingTaskFactory,
+    // snipingTaskFactory: defaultSnipingTaskFactory,
+    snipingTaskFactory: spamSnipingTaskFactory,
     snipingAnalyticalService: new InMemorySnipingAnalyticalService(),
   });
   await dispatcher.start();

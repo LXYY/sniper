@@ -42,6 +42,12 @@ export class ErrBuyTxnFailure extends TaskError {
   }
 }
 
+export class ErrAllSpamsFailed extends TaskError {
+  constructor(identifier: string) {
+    super(`All "${identifier}" spam tasks are failed.`);
+  }
+}
+
 export class ErrRuntimeError extends TaskError {
   constructor(message: string) {
     super(`Runtime error: ${message}`);

@@ -1,7 +1,7 @@
 import BN from "bn.js";
 import { SplToken } from "../common/spl_token";
 import { QuoteToken } from "../common/types";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, Signer } from "@solana/web3.js";
 import Decimal from "decimal.js";
 
 export enum SwapTxnType {
@@ -23,6 +23,7 @@ export interface SwapOptions {
   skipPreflight: boolean;
   maxRetries?: number;
   priorityFeeInMicroLamports: number;
+  payer?: Signer;
 }
 
 export interface Quote {

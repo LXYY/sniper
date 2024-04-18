@@ -33,6 +33,7 @@ export interface GeneralConfig {
   priceSampleInterval: number;
   activeTasksPollingInterval: number;
   sendTxnRetries: number;
+  defaultPriorityFeeLamports: number;
 }
 
 export interface TxnConfig {

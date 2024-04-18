@@ -7,6 +7,7 @@ oneShotMode = true
 priceSampleInterval = 3
 activeTasksPollingInterval = 5
 sendTxnRetries = 0
+defaultPriorityFeeLamports = 100000
 
 [txn]
 skipPreflight = true
@@ -41,7 +42,7 @@ hardCashOutTimeSec = 15
 buySlippage = 50
 buyFeeMicroLamports = 5000000
 sellSlippage = 50
-sellFeeMicroLamports = 1000000
+sellFeeMicroLamports = 100000
 quoteTokenBuyInPercentage = 2
 minQuoteTokenIn = 0.1
 maxQuoteTokenIn = 0.5

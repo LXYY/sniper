@@ -1,5 +1,6 @@
 import { backOff } from "exponential-backoff";
 import {
+  ComputeBudgetProgram,
   ParsedInstruction,
   ParsedTransactionWithMeta,
   PartiallyDecodedInstruction,
@@ -15,6 +16,7 @@ import solConnection from "./sol_connection";
 import { sleep } from "./utils";
 import { sniperPayer } from "./payer";
 import BN from "bn.js";
+import sniperConfig from "./config";
 
 export async function confirmAndGetTransaction(signature: string) {
   const latestBlockHash = await backOff(() =>
@@ -101,6 +103,12 @@ export async function getSolTransferTransaction(
     payerKey: payer,
     recentBlockhash: latestBlockhash.blockhash,
     instructions: [
+      ComputeBudgetProgram.setComputeUnitLimit({
+        units: 10000,
+      }),
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: sniperConfig.general.defaultPriorityFeeLamports,
+      }),
       SystemProgram.transfer({
         fromPubkey: payer,
         toPubkey: recipient,

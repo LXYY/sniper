@@ -249,7 +249,7 @@ export class SpamSnipingTask implements SnipingTask {
   }
 
   private getSnipingWalletBalance(): BN {
-    const requiredAmount = 1.5 * sniperConfig.spam.buyInAmount;
+    const requiredAmount = sniperConfig.spam.buyInAmount + 0.05;
     return uiAmountToBN(
       requiredAmount,
       this.input.poolCreation.quoteToken.decimals,

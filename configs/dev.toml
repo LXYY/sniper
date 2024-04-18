@@ -52,4 +52,4 @@ enabled = true
 intervalMs = 400
 timeoutSec = 180
 buyInAmount = 0.1
-numCashOutTxns = 60
+numCashOutTxns = 20

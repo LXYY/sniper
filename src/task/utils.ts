@@ -69,7 +69,9 @@ export function getTaskSummaryFromError(
 export function printSwapSummary(summary: SwapSummary) {
   console.log(`txnSignature: ${summary.txnSignature}`);
   console.log(`txnType: ${summary.txnType}`);
-  console.log(`blockTimestamp: ${summary.blockTimestamp}`);
+  console.log(
+    `blockTimestamp: ${new Date(summary.blockTimestamp * 1000).toUTCString()}`,
+  );
   console.log(`preBaseTokenAmount: ${summary.preBaseTokenAmount.toString()}`);
   console.log(`postBaseTokenAmount: ${summary.postBaseTokenAmount.toString()}`);
   console.log(`preQuoteTokenAmount: ${summary.preQuoteTokenAmount.toString()}`);

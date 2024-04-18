@@ -92,6 +92,8 @@ export class RaydiumV4Swapper implements TokenSwapper {
       minAmountOut: quote.minAmountOut,
       payer: payer.publicKey,
       priorityFeeMicroLamports: opts.priorityFeeInMicroLamports,
+      // Close the base token ATA after selling.
+      closeSourceAta: swapType === SwapTxnType.SELL,
     });
     const parsedTxn = await sendAndConfirmTransaction(
       txn,

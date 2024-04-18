@@ -204,6 +204,7 @@ export interface RaydiumV4SwapTransactionInput {
   minAmountOut: BN;
   payer: PublicKey;
   priorityFeeMicroLamports: number;
+  closeSourceAta: boolean;
 }
 
 export async function getSwapTransaction(
@@ -231,6 +232,16 @@ export async function getSwapTransaction(
       checkCreateATAOwner: true,
     },
   });
+
+  if (input.closeSourceAta) {
+    innerTransactions[0].instructions.push(
+      splToken.createCloseAccountInstruction(
+        splToken.getAssociatedTokenAddressSync(tokenIn.mint, input.payer),
+        input.payer,
+        input.payer,
+      ),
+    );
+  }
 
   const latestBlockhash =
     await solConnection.getLatestBlockhashAndContext("processed");

@@ -48,9 +48,10 @@ async function testSwapper() {
     `postQuoteTokenAmount: ${summary.postQuoteTokenAmount.toString()}`,
   );
 
-  const sellAmount = summary.postBaseTokenAmount.sub(
-    summary.preBaseTokenAmount,
-  );
+  // const sellAmount = summary.postBaseTokenAmount.sub(
+  //   summary.preBaseTokenAmount,
+  // );
+  const sellAmount = summary.postBaseTokenAmount;
   // const sellAmount = new BN("13014245680");
   quote = await swapper.getSellQuote(sellAmount, 5);
   console.log(`selling quote: ${inspect(quote)}`);
@@ -74,30 +75,30 @@ async function testSwapper() {
 async function main() {
   console.log(inspect(sniperConfig));
 
-  // await testSwapper();
+  await testSwapper();
 
-  // Handle SIGINT and SIGTERM gracefully.
-  async function cleanup() {
-    await dispatcher.stop();
-  }
-
-  process.on("SIGINT", () => {
-    cleanup();
-  });
-  process.on("SIGTERM", () => {
-    cleanup();
-  });
-
-  const dispatcher = new DefaultSnipingTaskDispatcher({
-    poolCreationEventSource: new RaydiumPoolCreationEventSource(),
-    creatorBlacklist: new InMemoryCreatorBlacklist(),
-    snipingCriteria: new RaydiumV4SnipingCriteria(),
-    tokenSwapperFactory: raydiumV4SwapperFactory,
-    // snipingTaskFactory: defaultSnipingTaskFactory,
-    snipingTaskFactory: spamSnipingTaskFactory,
-    snipingAnalyticalService: new InMemorySnipingAnalyticalService(),
-  });
-  await dispatcher.start();
+  // // Handle SIGINT and SIGTERM gracefully.
+  // async function cleanup() {
+  //   await dispatcher.stop();
+  // }
+  //
+  // process.on("SIGINT", () => {
+  //   cleanup();
+  // });
+  // process.on("SIGTERM", () => {
+  //   cleanup();
+  // });
+  //
+  // const dispatcher = new DefaultSnipingTaskDispatcher({
+  //   poolCreationEventSource: new RaydiumPoolCreationEventSource(),
+  //   creatorBlacklist: new InMemoryCreatorBlacklist(),
+  //   snipingCriteria: new RaydiumV4SnipingCriteria(),
+  //   tokenSwapperFactory: raydiumV4SwapperFactory,
+  //   // snipingTaskFactory: defaultSnipingTaskFactory,
+  //   snipingTaskFactory: spamSnipingTaskFactory,
+  //   snipingAnalyticalService: new InMemorySnipingAnalyticalService(),
+  // });
+  // await dispatcher.start();
 }
 
 main();

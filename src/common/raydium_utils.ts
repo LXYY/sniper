@@ -17,7 +17,10 @@ import {
   TxVersion,
 } from "@raydium-io/raydium-sdk";
 import { MarketCreation, PoolCreation, PoolType } from "./types";
-import splToken from "@solana/spl-token";
+import {
+  getAssociatedTokenAddressSync,
+  createCloseAccountInstruction,
+} from "@solana/spl-token";
 import solConnection from "./sol_connection";
 import {
   Connection,
@@ -235,8 +238,8 @@ export async function getSwapTransaction(
 
   if (input.closeSourceAta) {
     innerTransactions[0].instructions.push(
-      splToken.createCloseAccountInstruction(
-        splToken.getAssociatedTokenAddressSync(tokenIn.mint, input.payer),
+      createCloseAccountInstruction(
+        getAssociatedTokenAddressSync(tokenIn.mint, input.payer),
         input.payer,
         input.payer,
       ),

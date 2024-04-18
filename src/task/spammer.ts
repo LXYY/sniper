@@ -54,7 +54,7 @@ export class DefaultSpammer<T> implements TaskSpammer<T> {
       console.log(
         `Spammer "${this.input.identifier}": waiting for ${numPendingTasks} pending tasks to finish...`,
       );
-      await sleep(3000);
+      await sleep(10000);
     }
   }
 

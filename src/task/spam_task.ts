@@ -160,7 +160,8 @@ export class SpamSnipingTask implements SnipingTask {
       spamFn: async (index: number) => {
         return await this.input.tokenSwapper.sellToken(quote, {
           skipPreflight: true,
-          priorityFeeInMicroLamports: 0,
+          priorityFeeInMicroLamports:
+            sniperConfig.strategy.sellFeeMicroLamports,
           payer: this.snipingWallet,
         });
       },

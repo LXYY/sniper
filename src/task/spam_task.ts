@@ -29,6 +29,7 @@ export class SpamSnipingTask implements SnipingTask {
   private input: SnipingTaskInput;
   private snipingWallet: Keypair;
   private snipingStartTime: number;
+  private initialized: boolean;
   private investedAmount: BN;
   private returnAmount: BN;
   private readonly buyInSpammer: DefaultSpammer<SwapSummary>;
@@ -38,6 +39,8 @@ export class SpamSnipingTask implements SnipingTask {
 
   constructor(input: SnipingTaskInput) {
     this.input = input;
+    this.snipingStartTime = 0;
+    this.initialized = false;
     this.snipingWallet = Keypair.generate();
     this.investedAmount = new BN(0);
     this.returnAmount = new BN(0);
@@ -88,6 +91,7 @@ export class SpamSnipingTask implements SnipingTask {
         console.log(
           `Sniping wallet: ${this.snipingWallet.publicKey.toBase58()} initialized.`,
         );
+        this.initialized = true;
         return;
       } catch (error) {
         console.log(
@@ -167,6 +171,10 @@ export class SpamSnipingTask implements SnipingTask {
   }
 
   private async finalize(err?: Error): Promise<TaskSummary> {
+    if (!this.initialized) {
+      return this.getTaskSummary(err);
+    }
+
     // Wait until all the pending transactions are settled.
     await this.buyInSpammer.waitForPendingTasks();
     await this.cashOutSpammer.waitForPendingTasks();

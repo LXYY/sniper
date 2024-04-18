@@ -127,7 +127,7 @@ export class SpamSnipingTask implements SnipingTask {
       spamFn: async (index: number) => {
         return await this.input.tokenSwapper.buyToken(quote, {
           skipPreflight: true,
-          priorityFeeInMicroLamports: 0,
+          priorityFeeInMicroLamports: sniperConfig.strategy.buyFeeMicroLamports,
           payer: this.snipingWallet,
         });
       },
@@ -184,7 +184,7 @@ export class SpamSnipingTask implements SnipingTask {
       await backOff(() =>
         solConnection.getBalance(this.snipingWallet.publicKey),
       ),
-    ).subn(5000);
+    ).subn(6000);
 
     console.log(
       `Finalizing sniping task, transferring ${rawAmountToDecimal(

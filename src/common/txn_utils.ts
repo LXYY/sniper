@@ -9,6 +9,7 @@ import {
   SignatureResult,
   Signer,
   SystemProgram,
+  TransactionInstruction,
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
@@ -93,16 +94,26 @@ export function programInvokedFromLogs(
   return false;
 }
 
-export async function getSolTransferTransaction(
-  amount: BN,
+export async function createTransaction(
+  instructions: TransactionInstruction[],
   payer: PublicKey,
-  recipient: PublicKey,
 ): Promise<VersionedTransaction> {
   const latestBlockhash = await solConnection.getLatestBlockhash();
   const messageV0 = new TransactionMessage({
     payerKey: payer,
     recentBlockhash: latestBlockhash.blockhash,
-    instructions: [
+    instructions: instructions,
+  }).compileToV0Message();
+  return new VersionedTransaction(messageV0);
+}
+
+export async function getSolTransferTransaction(
+  amount: BN,
+  payer: PublicKey,
+  recipient: PublicKey,
+): Promise<VersionedTransaction> {
+  return await createTransaction(
+    [
       ComputeBudgetProgram.setComputeUnitLimit({
         units: 10000,
       }),
@@ -115,8 +126,8 @@ export async function getSolTransferTransaction(
         lamports: BigInt(amount.toString()),
       }),
     ],
-  }).compileToV0Message();
-  return new VersionedTransaction(messageV0);
+    payer,
+  );
 }
 
 export async function sendAndConfirmTransaction(
@@ -157,7 +168,10 @@ export async function sendAndConfirmTransaction(
         throw new Error("transaction not found, retrying");
       }
       console.log(
-        `Transaction ${txnSignature} succeeded after ${(Date.now() / 1000 - startingTime).toFixed(2)} seconds, slot: ${result.context.slot}`,
+        `Transaction ${txnSignature} succeeded after ${(
+          Date.now() / 1000 -
+          startingTime
+        ).toFixed(2)} seconds, slot: ${result.context.slot}`,
       );
       return txn;
     },

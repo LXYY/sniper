@@ -1,0 +1,22 @@
+[package]
+name = "sniper-helper"
+version = "0.1.0"
+description = "The helper program for sniper on Solana."
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "sniper_helper"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = { version = "0.29.0", features = ["init-if-needed", "event-cpi"] }
+solana-program = "=1.17"
+anchor-spl = { version = "0.29.0", features = ["metadata", "memo"] }
+bincode = "1.3.3"

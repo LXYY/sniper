@@ -1,0 +1,33 @@
+[toolchain]
+
+[features]
+seeds = false
+skip-lint = false
+
+[workspace]
+types = "src/program/idl"
+
+[programs.devnet]
+sniper_helper = "51kNvtqUvNKYCm3xYfYNRxeaZpsgjfx5sbqV2hvSTKhs"
+
+[programs.localnet]
+sniper_helper = "51kNvtqUvNKYCm3xYfYNRxeaZpsgjfx5sbqV2hvSTKhs"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "localnet"
+wallet = "/Users/yuzhang/.config/solana/id-devnet.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[test.validator]
+url = "https://api.mainnet-beta.solana.com"
+
+[[test.validator.clone]]
+address = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+
+[[test.validator.clone]]
+address = "BPFLoaderUpgradeab1e11111111111111111111111"

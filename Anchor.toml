@@ -8,10 +8,10 @@ skip-lint = false
 types = "src/program/idl"
 
 [programs.devnet]
-sniper_helper = "51kNvtqUvNKYCm3xYfYNRxeaZpsgjfx5sbqV2hvSTKhs"
+sniper_helper = "3QHat3MhK9eq1hXdwpgpqUvpJr3fX5tiZ96NokS4T75c"
 
 [programs.localnet]
-sniper_helper = "51kNvtqUvNKYCm3xYfYNRxeaZpsgjfx5sbqV2hvSTKhs"
+sniper_helper = "3QHat3MhK9eq1hXdwpgpqUvpJr3fX5tiZ96NokS4T75c"
 
 [registry]
 url = "https://api.apr.dev"

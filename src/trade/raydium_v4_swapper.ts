@@ -24,11 +24,12 @@ import sniperConfig from "../common/config";
 import {
   getLiquidityPoolInfo,
   getSwapTransaction,
+  RaydiumV4SwapTransactionInput,
   toRaydiumToken,
 } from "../common/raydium_utils";
 import { SwapDryRunner } from "./dry_runner";
 import Decimal from "decimal.js";
-import { rawAmountToDecimal } from "../common/utils";
+import { rawAmountToDecimal, uiAmountToBN } from "../common/utils";
 import { sniperPayer } from "../common/payer";
 import { sendAndConfirmTransaction } from "../common/txn_utils";
 import { QuoteToken } from "../common/types";
@@ -84,7 +85,7 @@ export class RaydiumV4Swapper implements TokenSwapper {
     const payer = opts.payer || (sniperPayer as Signer);
     const { poolKeys } =
       quote.protocolSpecificPayload as unknown as RaydiumV4QuotePayload;
-    const txn = await getSwapTransaction({
+    const input: RaydiumV4SwapTransactionInput = {
       poolKeys,
       tokenIn,
       tokenOut,
@@ -94,7 +95,21 @@ export class RaydiumV4Swapper implements TokenSwapper {
       priorityFeeMicroLamports: opts.priorityFeeInMicroLamports,
       // Close the base token ATA after selling.
       closeSourceAta: swapType === SwapTxnType.SELL,
-    });
+    };
+    // Run snipe-specific instructions for buying (only when spam-mode is enabled).
+    if (swapType === SwapTxnType.BUY && sniperConfig.spam.enabled) {
+      input.snipeSpecificInput = {
+        minQuoteTokenAmount: uiAmountToBN(
+          sniperConfig.pool.minQuoteTokenInPool,
+          this.quoteToken.decimals,
+        ),
+        maxQuoteTokenAmount: uiAmountToBN(
+          sniperConfig.pool.maxQuoteTokenInPool,
+          this.quoteToken.decimals,
+        ),
+      };
+    }
+    const txn = await getSwapTransaction(input);
     const parsedTxn = await sendAndConfirmTransaction(
       txn,
       opts.skipPreflight,

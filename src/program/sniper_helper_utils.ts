@@ -6,7 +6,7 @@ import BN from "bn.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 export const SNIPER_HELPER_PROGRAM_ID = new PublicKey(
-  "51kNvtqUvNKYCm3xYfYNRxeaZpsgjfx5sbqV2hvSTKhs",
+  "3QHat3MhK9eq1hXdwpgpqUvpJr3fX5tiZ96NokS4T75c",
 );
 
 export const SNIPER_HELPER_PROGRAM = new Program<SniperHelper>(

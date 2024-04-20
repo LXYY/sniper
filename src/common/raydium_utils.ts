@@ -26,11 +26,16 @@ import {
   Connection,
   PublicKey,
   Transaction,
+  TransactionInstruction,
   VersionedTransaction,
 } from "@solana/web3.js";
 import { SplToken } from "./spl_token";
 import BN from "bn.js";
 import { sniperPayer } from "./payer";
+import {
+  createCheckTokenAmountInstruction,
+  createInitSnipeInstruction,
+} from "../program/sniper_helper_utils";
 
 export const RAYDIUM_SWAP_TXN_COMPUTE_UNIT_LIMIT = 100000;
 
@@ -199,6 +204,11 @@ export function toRaydiumToken(splToken: SplToken): Token {
   );
 }
 
+export interface SnipeSpecificInput {
+  minQuoteTokenAmount: BN;
+  maxQuoteTokenAmount: BN;
+}
+
 export interface RaydiumV4SwapTransactionInput {
   poolKeys: LiquidityPoolKeys;
   tokenIn: SplToken;
@@ -208,6 +218,7 @@ export interface RaydiumV4SwapTransactionInput {
   payer: PublicKey;
   priorityFeeMicroLamports: number;
   closeSourceAta: boolean;
+  snipeSpecificInput?: SnipeSpecificInput;
 }
 
 export async function getSwapTransaction(
@@ -246,6 +257,21 @@ export async function getSwapTransaction(
     );
   }
 
+  if (input.snipeSpecificInput) {
+    const snipeSpecificInstructions = await getSnipeSpecificInstructions(
+      input.poolKeys,
+      input.snipeSpecificInput,
+      input.payer,
+    );
+    // Insert the elements at position 2 (skip the first 2 instructions which are for compute unit & priority fee
+    // settings) of innerTransactions[0].instructions.
+    innerTransactions[0].instructions.splice(
+      2,
+      0,
+      ...snipeSpecificInstructions,
+    );
+  }
+
   const latestBlockhash =
     await solConnection.getLatestBlockhashAndContext("processed");
   const txnToSend = await buildSimpleTransaction({
@@ -258,4 +284,21 @@ export async function getSwapTransaction(
   });
 
   return txnToSend[0] as VersionedTransaction;
+}
+
+async function getSnipeSpecificInstructions(
+  poolKeys: LiquidityPoolKeys,
+  snipeSpecificInput: SnipeSpecificInput,
+  payer: PublicKey,
+): Promise<TransactionInstruction[]> {
+  return [
+    // Initializes the snipe account to avoid double-spend.
+    await createInitSnipeInstruction(payer, poolKeys.baseMint),
+    // Checks the amount of the quote token in the quote vault before swapping.
+    await createCheckTokenAmountInstruction(
+      poolKeys.quoteVault,
+      snipeSpecificInput.minQuoteTokenAmount,
+      snipeSpecificInput.maxQuoteTokenAmount,
+    ),
+  ];
 }

@@ -58,7 +58,7 @@ export class SpamSnipingTask implements SnipingTask {
       await this.input.snipingCriteria.waitUntilSatisfied(
         getSnipingCriteriaInput(this.input.poolCreation),
       );
-      await this.initialize();
+      // await this.initialize();
       await this.buyIn();
       await this.cashOut();
     } catch (error) {
@@ -128,7 +128,7 @@ export class SpamSnipingTask implements SnipingTask {
         return await this.input.tokenSwapper.buyToken(quote, {
           skipPreflight: true,
           priorityFeeInMicroLamports: sniperConfig.strategy.buyFeeMicroLamports,
-          payer: this.snipingWallet,
+          // payer: this.snipingWallet,
         });
       },
     };
@@ -162,7 +162,7 @@ export class SpamSnipingTask implements SnipingTask {
           skipPreflight: true,
           priorityFeeInMicroLamports:
             sniperConfig.strategy.sellFeeMicroLamports,
-          payer: this.snipingWallet,
+          // payer: this.snipingWallet,
         });
       },
     };
@@ -179,50 +179,50 @@ export class SpamSnipingTask implements SnipingTask {
     // Wait until all the pending transactions are settled.
     await this.buyInSpammer.waitForPendingTasks();
     await this.cashOutSpammer.waitForPendingTasks();
-
-    const snipingWalletBalanceAfterFee = new BN(
-      await backOff(() =>
-        solConnection.getBalance(this.snipingWallet.publicKey),
-      ),
-    ).subn(6000);
-
-    console.log(
-      `Finalizing sniping task, transferring ${rawAmountToDecimal(
-        snipingWalletBalanceAfterFee,
-        this.input.poolCreation.quoteToken.decimals,
-      ).toFixed(2)} SOL back to payer.`,
-    );
-
-    while (true) {
-      console.log(`Private key: ${bs58.encode(this.snipingWallet.secretKey)}`);
-      try {
-        const transferTxn = await getSolTransferTransaction(
-          snipingWalletBalanceAfterFee,
-          this.snipingWallet.publicKey,
-          sniperPayer.publicKey,
-        );
-        const parsedTxn = await sendAndConfirmTransaction(
-          transferTxn,
-          false,
-          this.snipingWallet,
-        );
-        this.returnAmount = getSolBalanceChange(
-          parsedTxn,
-          sniperPayer.publicKey,
-        );
-        console.log(
-          `Sniping wallet: ${this.snipingWallet.publicKey.toBase58()} finalized.`,
-        );
-        break;
-      } catch (error) {
-        console.log(
-          `Failed to finalizing sniping wallet ${this.snipingWallet.publicKey.toBase58()}, error: ${inspect(error)}`,
-        );
-        console.log(
-          `Private key: ${bs58.encode(this.snipingWallet.secretKey)}`,
-        );
-      }
-    }
+    //
+    // const snipingWalletBalanceAfterFee = new BN(
+    //   await backOff(() =>
+    //     solConnection.getBalance(this.snipingWallet.publicKey),
+    //   ),
+    // ).subn(6000);
+    //
+    // console.log(
+    //   `Finalizing sniping task, transferring ${rawAmountToDecimal(
+    //     snipingWalletBalanceAfterFee,
+    //     this.input.poolCreation.quoteToken.decimals,
+    //   ).toFixed(2)} SOL back to payer.`,
+    // );
+    //
+    // while (true) {
+    //   console.log(`Private key: ${bs58.encode(this.snipingWallet.secretKey)}`);
+    //   try {
+    //     const transferTxn = await getSolTransferTransaction(
+    //       snipingWalletBalanceAfterFee,
+    //       this.snipingWallet.publicKey,
+    //       sniperPayer.publicKey,
+    //     );
+    //     const parsedTxn = await sendAndConfirmTransaction(
+    //       transferTxn,
+    //       false,
+    //       this.snipingWallet,
+    //     );
+    //     this.returnAmount = getSolBalanceChange(
+    //       parsedTxn,
+    //       sniperPayer.publicKey,
+    //     );
+    //     console.log(
+    //       `Sniping wallet: ${this.snipingWallet.publicKey.toBase58()} finalized.`,
+    //     );
+    //     break;
+    //   } catch (error) {
+    //     console.log(
+    //       `Failed to finalizing sniping wallet ${this.snipingWallet.publicKey.toBase58()}, error: ${inspect(error)}`,
+    //     );
+    //     console.log(
+    //       `Private key: ${bs58.encode(this.snipingWallet.secretKey)}`,
+    //     );
+    //   }
+    // }
 
     return this.getTaskSummary(err);
   }
@@ -241,8 +241,12 @@ export class SpamSnipingTask implements SnipingTask {
       quoteToken: this.input.poolCreation.quoteToken,
       snipingStartTime: this.snipingStartTime,
       snipingEndTime: Date.now() / 1000,
-      quoteTokenInAmount: this.investedAmount,
-      quoteTokenOutAmount: this.returnAmount,
+      quoteTokenInAmount: this.buyInSwapSummary.preQuoteTokenAmount.sub(
+        this.buyInSwapSummary.postQuoteTokenAmount,
+      ),
+      quoteTokenOutAmount: this.cashOutSwapSummary.postQuoteTokenAmount.sub(
+        this.cashOutSwapSummary.preQuoteTokenAmount,
+      ),
       priceSamples: [],
       txnSignatures: [
         this.buyInSwapSummary.txnSignature,

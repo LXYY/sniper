@@ -5,7 +5,7 @@ use anchor_lang::prelude::*;
 use instructions::*;
 
 mod instructions;
-declare_id!("51kNvtqUvNKYCm3xYfYNRxeaZpsgjfx5sbqV2hvSTKhs");
+declare_id!("3QHat3MhK9eq1hXdwpgpqUvpJr3fX5tiZ96NokS4T75c");
 
 #[program]
 pub mod sniper_helper {

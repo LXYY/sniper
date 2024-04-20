@@ -15,7 +15,7 @@ txnSubmittingRetries = 2
 
 [pool]
 requireMintDisabled = false
-requireFreezeDisabled = true
+requireFreezeDisabled = false
 requireMetadata = true
 requireImage = true
 requireSymbol = true

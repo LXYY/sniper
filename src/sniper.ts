@@ -26,6 +26,7 @@ import { sniperPayer } from "./common/payer";
 import { bundle } from "jito-ts";
 import { Bundle } from "jito-ts/dist/sdk/block-engine/types";
 import { searcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
+import { confirmAndGetTransaction } from "./common/txn_utils";
 
 async function testSwapper() {
   const jitoKeypair = Keypair.fromSecretKey(
@@ -71,7 +72,7 @@ async function testSwapper() {
   };
   const quoteToken = fromQuoteToken(QuoteToken.SOL);
   const swapper = raydiumV4SwapperFactory(poolId, baseToken, quoteToken);
-  let quote = await swapper.getBuyQuote(new BN(100000000), 5);
+  let quote = await swapper.getBuyQuote(new BN(1_000_000_000), 5);
   console.log(`buying quote: ${inspect(quote)}`);
   console.log(`[${Date.now()}] start buying`);
   const { poolKeys } = quote.protocolSpecificPayload as RaydiumV4QuotePayload;
@@ -98,7 +99,7 @@ async function testSwapper() {
 
   maybeBundle = bundle.addTipTx(
     sniperPayer,
-    1000000,
+    10000000,
     new PublicKey(tipAccounts[0]),
     txn.message.recentBlockhash,
   );
@@ -108,6 +109,11 @@ async function testSwapper() {
 
   const bundleId = await client.sendBundle(maybeBundle);
   console.log(`bundleId: ${bundleId}`);
+
+  const resultTxn = await confirmAndGetTransaction(
+    bs58.encode(txn.signatures[0]),
+  );
+  console.log(`txn: ${inspect(resultTxn)}`);
   //
   // let summary = await swapper.buyToken(quote, {
   //   skipPreflight: false,

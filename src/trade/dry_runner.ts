@@ -24,6 +24,7 @@ export class SwapDryRunner {
       postBaseTokenAmount: expectedAmount,
       preQuoteTokenAmount: buyAmount,
       postQuoteTokenAmount: new BN(0),
+      blockTimestamp: 0,
     };
   }
 
@@ -43,6 +44,7 @@ export class SwapDryRunner {
       ),
       preQuoteTokenAmount: decimalToBN(preQuoteTokenAmount),
       postQuoteTokenAmount: decimalToBN(this.positionManager.getTotalReturn()),
+      blockTimestamp: 0,
     };
   }
 }

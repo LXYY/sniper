@@ -49,7 +49,7 @@ maxQuoteTokenIn = 0.5
 quoteTickIntervalMs = 50
 
 [spam]
-enabled = true
+enabled = false
 initialDelaySec = 120
 intervalMs = 500
 timeoutSec = 120

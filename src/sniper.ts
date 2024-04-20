@@ -48,16 +48,21 @@ async function testSwapper() {
 
   while (true) {
     const nextLeader = await client.getNextScheduledLeader();
-    if (nextLeader.currentSlot == nextLeader.nextLeaderSlot) {
+    // if (nextLeader.currentSlot == nextLeader.nextLeaderSlot) {
+    //   console.log(`Next leader: ${inspect(nextLeader)}`);
+    //   console.log(`Current slot: ${nextLeader.currentSlot} is a JITO slot`);
+    //   break;
+    // }
+    if (nextLeader.currentSlot < nextLeader.nextLeaderSlot) {
       console.log(`Next leader: ${inspect(nextLeader)}`);
-      console.log(`Current slot: ${nextLeader.currentSlot} is a JITO slot`);
+      console.log(`Current slot: ${nextLeader.currentSlot} is not a JITO slot`);
       break;
     }
     await sleep(200);
   }
 
-  console.log("Submitting txn as a bundle");
-
+  // console.log("Submitting txn as a bundle");
+  //
   const poolId = new PublicKey("BGS69Ju7DRRVxw9b2B5TnrMLzVdJcscV8UtKywqNsgwx");
   const tokenMintAddress = new PublicKey(
     "HLptm5e6rTgh4EKgDpYFrnRHbjpkMyVdEeREEa2G7rf9",
@@ -75,45 +80,53 @@ async function testSwapper() {
   let quote = await swapper.getBuyQuote(new BN(500_000_000), 5);
   console.log(`buying quote: ${inspect(quote)}`);
   console.log(`[${Date.now()}] start buying`);
-  const { poolKeys } = quote.protocolSpecificPayload as RaydiumV4QuotePayload;
 
-  const txn = await getSwapTransaction({
-    poolKeys: poolKeys,
-    tokenIn: quoteToken,
-    tokenOut: baseToken,
-    amountIn: quote.amountIn,
-    minAmountOut: quote.minAmountOut,
-    payer: sniperPayer.publicKey,
-    priorityFeeMicroLamports: 0,
-    closeSourceAta: false,
+  let summary = await swapper.buyToken(quote, {
+    skipPreflight: false,
+    priorityFeeInMicroLamports: 50000000,
   });
-  txn.sign([sniperPayer]);
+  console.log("inspect summary: ", inspect(summary));
 
-  const bundle = new Bundle([], 2);
-  console.log("latest blockhash: ", txn.message.recentBlockhash);
-  let maybeBundle: Bundle | Error;
-  maybeBundle = bundle.addTransactions(txn);
-  if (maybeBundle instanceof Error) {
-    throw maybeBundle;
-  }
+  // const { poolKeys } = quote.protocolSpecificPayload as RaydiumV4QuotePayload;
+  //
+  // const txn = await getSwapTransaction({
+  //   poolKeys: poolKeys,
+  //   tokenIn: quoteToken,
+  //   tokenOut: baseToken,
+  //   amountIn: quote.amountIn,
+  //   minAmountOut: quote.minAmountOut,
+  //   payer: sniperPayer.publicKey,
+  //   priorityFeeMicroLamports: 0,
+  //   closeSourceAta: false,
+  // });
+  // txn.sign([sniperPayer]);
+  //
+  // const bundle = new Bundle([], 2);
+  // console.log("latest blockhash: ", txn.message.recentBlockhash);
+  // let maybeBundle: Bundle | Error;
+  // maybeBundle = bundle.addTransactions(txn);
+  // if (maybeBundle instanceof Error) {
+  //   throw maybeBundle;
+  // }
+  //
+  // maybeBundle = bundle.addTipTx(
+  //   sniperPayer,
+  //   5000000,
+  //   new PublicKey(tipAccounts[0]),
+  //   txn.message.recentBlockhash,
+  // );
+  // if (maybeBundle instanceof Error) {
+  //   throw maybeBundle;
+  // }
+  //
+  // const bundleId = await client.sendBundle(maybeBundle);
+  // console.log(`bundleId: ${bundleId}`);
+  //
+  // const resultTxn = await confirmAndGetTransaction(
+  //   bs58.encode(txn.signatures[0]),
+  // );
+  // console.log(`txn: ${inspect(resultTxn)}`);
 
-  maybeBundle = bundle.addTipTx(
-    sniperPayer,
-    5000000,
-    new PublicKey(tipAccounts[0]),
-    txn.message.recentBlockhash,
-  );
-  if (maybeBundle instanceof Error) {
-    throw maybeBundle;
-  }
-
-  const bundleId = await client.sendBundle(maybeBundle);
-  console.log(`bundleId: ${bundleId}`);
-
-  const resultTxn = await confirmAndGetTransaction(
-    bs58.encode(txn.signatures[0]),
-  );
-  console.log(`txn: ${inspect(resultTxn)}`);
   //
   // let summary = await swapper.buyToken(quote, {
   //   skipPreflight: false,

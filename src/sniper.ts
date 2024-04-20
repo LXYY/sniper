@@ -72,7 +72,7 @@ async function testSwapper() {
   };
   const quoteToken = fromQuoteToken(QuoteToken.SOL);
   const swapper = raydiumV4SwapperFactory(poolId, baseToken, quoteToken);
-  let quote = await swapper.getBuyQuote(new BN(1_000_000_000), 5);
+  let quote = await swapper.getBuyQuote(new BN(500_000_000), 5);
   console.log(`buying quote: ${inspect(quote)}`);
   console.log(`[${Date.now()}] start buying`);
   const { poolKeys } = quote.protocolSpecificPayload as RaydiumV4QuotePayload;
@@ -99,7 +99,7 @@ async function testSwapper() {
 
   maybeBundle = bundle.addTipTx(
     sniperPayer,
-    10000000,
+    5000000,
     new PublicKey(tipAccounts[0]),
     txn.message.recentBlockhash,
   );

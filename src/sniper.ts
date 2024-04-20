@@ -52,7 +52,7 @@ async function testSwapper() {
       console.log(`Current slot: ${nextLeader.currentSlot} is a JITO slot`);
       break;
     }
-    await sleep(400);
+    await sleep(200);
   }
 
   console.log("Submitting txn as a bundle");
@@ -89,10 +89,11 @@ async function testSwapper() {
   txn.sign([sniperPayer]);
 
   const bundle = new Bundle([txn], 2);
+  console.log("latest blockhash: ", txn.message.recentBlockhash);
   let maybeBundle: Bundle | Error;
   maybeBundle = bundle.addTipTx(
     sniperPayer,
-    10000,
+    100000,
     new PublicKey(tipAccounts[0]),
     txn.message.recentBlockhash,
   );

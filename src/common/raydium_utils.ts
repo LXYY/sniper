@@ -274,6 +274,7 @@ export async function getSwapTransaction(
 
   const latestBlockhash =
     await solConnection.getLatestBlockhashAndContext("processed");
+  console.log("latest blockhash: ", latestBlockhash.value.blockhash);
   const txnToSend = await buildSimpleTransaction({
     connection: solConnection,
     makeTxVersion: TxVersion.V0,

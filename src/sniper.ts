@@ -88,12 +88,17 @@ async function testSwapper() {
   });
   txn.sign([sniperPayer]);
 
-  const bundle = new Bundle([txn], 2);
+  const bundle = new Bundle([], 2);
   console.log("latest blockhash: ", txn.message.recentBlockhash);
   let maybeBundle: Bundle | Error;
+  maybeBundle = bundle.addTransactions(txn);
+  if (maybeBundle instanceof Error) {
+    throw maybeBundle;
+  }
+
   maybeBundle = bundle.addTipTx(
     sniperPayer,
-    100000,
+    1000000,
     new PublicKey(tipAccounts[0]),
     txn.message.recentBlockhash,
   );

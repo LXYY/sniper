@@ -52,6 +52,7 @@ async function testSwapper() {
       console.log(`Current slot: ${nextLeader.currentSlot} is a JITO slot`);
       break;
     }
+    await sleep(400);
   }
 
   console.log("Submitting txn as a bundle");

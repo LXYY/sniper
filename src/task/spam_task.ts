@@ -10,7 +10,12 @@ import { Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
 import BN from "bn.js";
 import sniperConfig from "../common/config";
-import { inspect, rawAmountToDecimal, uiAmountToBN } from "../common/utils";
+import {
+  inspect,
+  rawAmountToDecimal,
+  sleep,
+  uiAmountToBN,
+} from "../common/utils";
 import {
   getSolBalanceChange,
   getSolTransferTransaction,
@@ -58,8 +63,7 @@ export class SpamSnipingTask implements SnipingTask {
       await this.input.snipingCriteria.waitUntilSatisfied(
         getSnipingCriteriaInput(this.input.poolCreation),
       );
-      this.initialized = true;
-      // await this.initialize();
+      await this.initialize();
       await this.buyIn();
       await this.cashOut();
     } catch (error) {
@@ -71,35 +75,40 @@ export class SpamSnipingTask implements SnipingTask {
 
   private async initialize() {
     this.snipingStartTime = Date.now() / 1000;
-    const transferAmount = this.getSnipingWalletBalance();
     console.log(
-      `Initializing sniping wallet: ${this.snipingWallet.publicKey},` +
-        ` private key: ${bs58.encode(this.snipingWallet.secretKey)},` +
-        ` with SOL amount ${rawAmountToDecimal(transferAmount, this.input.poolCreation.quoteToken.decimals).toFixed(2)}.`,
+      `Sleeping for ${sniperConfig.spam.initialDelaySec} seconds before sending buy in transactions...`,
     );
-    while (true) {
-      try {
-        const transferTxn = await getSolTransferTransaction(
-          transferAmount,
-          sniperPayer.publicKey,
-          this.snipingWallet.publicKey,
-        );
-        const parsedTxn = await sendAndConfirmTransaction(transferTxn, false);
-        this.investedAmount = getSolBalanceChange(
-          parsedTxn,
-          sniperPayer.publicKey,
-        );
-        console.log(
-          `Sniping wallet: ${this.snipingWallet.publicKey.toBase58()} initialized.`,
-        );
-        this.initialized = true;
-        return;
-      } catch (error) {
-        console.log(
-          `Failed to initializing sniping wallet ${this.snipingWallet.publicKey.toBase58()}, error: ${inspect(error)}`,
-        );
-      }
-    }
+    await sleep(sniperConfig.spam.initialDelaySec * 1000);
+    this.initialized = true;
+    // const transferAmount = this.getSnipingWalletBalance();
+    // console.log(
+    //   `Initializing sniping wallet: ${this.snipingWallet.publicKey},` +
+    //     ` private key: ${bs58.encode(this.snipingWallet.secretKey)},` +
+    //     ` with SOL amount ${rawAmountToDecimal(transferAmount, this.input.poolCreation.quoteToken.decimals).toFixed(2)}.`,
+    // );
+    // while (true) {
+    //   try {
+    //     const transferTxn = await getSolTransferTransaction(
+    //       transferAmount,
+    //       sniperPayer.publicKey,
+    //       this.snipingWallet.publicKey,
+    //     );
+    //     const parsedTxn = await sendAndConfirmTransaction(transferTxn, false);
+    //     this.investedAmount = getSolBalanceChange(
+    //       parsedTxn,
+    //       sniperPayer.publicKey,
+    //     );
+    //     console.log(
+    //       `Sniping wallet: ${this.snipingWallet.publicKey.toBase58()} initialized.`,
+    //     );
+    //     this.initialized = true;
+    //     return;
+    //   } catch (error) {
+    //     console.log(
+    //       `Failed to initializing sniping wallet ${this.snipingWallet.publicKey.toBase58()}, error: ${inspect(error)}`,
+    //     );
+    //   }
+    // }
   }
 
   private async buyIn() {

@@ -81,6 +81,7 @@ export interface StrategyConfig {
 
 export interface SpamConfig {
   enabled: boolean;
+  initialDelaySec: number;
   intervalMs: number;
   timeoutSec: number;
   buyInAmount: number;

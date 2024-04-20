@@ -50,6 +50,7 @@ quoteTickIntervalMs = 50
 
 [spam]
 enabled = true
+initialDelaySec = 45
 intervalMs = 1000
 timeoutSec = 240
 buyInAmount = 0.1

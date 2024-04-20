@@ -21,8 +21,8 @@ requireImage = true
 requireSymbol = true
 minBaseTokenInPool = 1000000
 # 2.5 - 25 initial SOL in pool suggests a 5 - 50 SOL initial liquidity.
-minQuoteTokenInPool = 2.5
-maxQuoteTokenInPool = 25
+minQuoteTokenInPool = 2
+maxQuoteTokenInPool = 50
 
 [monitor]
 poolCreationMonitorTimeout = 3600

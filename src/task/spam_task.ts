@@ -58,6 +58,7 @@ export class SpamSnipingTask implements SnipingTask {
       await this.input.snipingCriteria.waitUntilSatisfied(
         getSnipingCriteriaInput(this.input.poolCreation),
       );
+      this.initialized = true;
       // await this.initialize();
       await this.buyIn();
       await this.cashOut();
@@ -258,6 +259,12 @@ export class SpamSnipingTask implements SnipingTask {
       initialCashOutPrice: getExecutionPriceFromSummary(
         this.cashOutSwapSummary,
       ).toFixed(10),
+      buyInTimeString: new Date(
+        this.buyInSwapSummary.blockTimestamp * 1000,
+      ).toISOString(),
+      cashOutTimeString: new Date(
+        this.cashOutSwapSummary.blockTimestamp * 1000,
+      ).toISOString(),
     };
   }
 

@@ -50,7 +50,7 @@ quoteTickIntervalMs = 50
 
 [spam]
 enabled = true
-intervalMs = 1000
+intervalMs = 500
 timeoutSec = 120
 buyInAmount = 0.1
-numCashOutTxns = 120
+numCashOutTxns = 60

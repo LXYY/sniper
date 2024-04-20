@@ -114,7 +114,12 @@ export class DefaultSnipingTaskDispatcher implements SnipingTaskDispatcher {
         ` invested: ${totalInvestment.toFixed(2)} ${summary.quoteToken.symbol}` +
         ` return: ${totalReturn.toFixed(2)} ${summary.quoteToken.symbol}` +
         ` PnL: ${pnl.toFixed(2)} ${summary.quoteToken.symbol}` +
-        ` ROI: ${roi.toFixed(2)} %`,
+        ` ROI: ${roi.toFixed(2)} %` +
+        ` Buy in time: ${summary.buyInTimeString}` +
+        ` Bun in price: ${summary.buyInPrice}` +
+        ` Cash out time: ${summary.cashOutTimeString}` +
+        ` Initial cash out price: ${summary.initialCashOutPrice}` +
+        ` Final cash out price: ${summary.finalCashOutPrice}`,
     );
     console.log(`Buy in price: ${summary.buyInPrice}`);
     console.log(`Initial cash out price: ${summary.initialCashOutPrice}`);

@@ -24,6 +24,8 @@ export interface TaskSummary {
   buyInPrice: string;
   initialCashOutPrice: string;
   finalCashOutPrice?: string;
+  buyInTimeString?: string;
+  cashOutTimeString?: string;
 }
 
 export interface SnipingCriteriaInput {

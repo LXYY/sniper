@@ -37,6 +37,7 @@ import {
   sendTxnAsJitoBundle,
 } from "../common/txn_utils";
 import { QuoteToken } from "../common/types";
+import { ErrRuntimeError } from "../task/errors";
 
 export interface RaydiumV4QuotePayload {
   poolKeys: LiquidityPoolKeysV4;
@@ -120,11 +121,17 @@ export class RaydiumV4Swapper implements TokenSwapper {
     let parsedTxn: ParsedTransactionWithMeta;
     if (sniperConfig.strategy.jitoOnly) {
       // Sends the transaction as a bundle.
+      console.log(
+        `Tip amount: ${uiAmountToBN(sniperConfig.strategy.jitoTip, 9).toString()} SOL`,
+      );
       const receipt = await sendTxnAsJitoBundle(
         txn,
         uiAmountToBN(sniperConfig.strategy.jitoTip, 9),
       );
       parsedTxn = await confirmAndGetTransaction(receipt.txnSignature);
+      if (!parsedTxn) {
+        throw new ErrRuntimeError("Failed to confirm transaction");
+      }
     } else {
       parsedTxn = await sendAndConfirmTransaction(
         txn,

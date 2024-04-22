@@ -29,7 +29,7 @@ import {
 } from "./utils";
 import jitoLeaderSchedule, {
   JitoLeaderSchedule,
-} from "../jito/leader-schedule";
+} from "../jito/leader_schedule";
 
 export interface SnipingTask {
   run(): Promise<void>;

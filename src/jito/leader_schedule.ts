@@ -1,4 +1,4 @@
-import { binarySearch, sleep } from "../common/utils";
+import { binarySearch, inspect, sleep } from "../common/utils";
 import jitoClient from "./client";
 import { SlotList } from "jito-ts/dist/gen/searcher";
 import { backOff } from "exponential-backoff";
@@ -138,6 +138,7 @@ export class RealtimeJitoLeaderSchedule implements JitoLeaderSchedule {
       await sleep(this.requestIntervalMs);
       try {
         this.nextLeaderSlot = await this.fetchNextLeaderSlot();
+        console.log(`Next leader slot: ${inspect(this.nextLeaderSlot)}`);
         this.recentErrors = 0;
       } catch (error) {
         console.error(`Error fetching next leader slot: ${error}`);

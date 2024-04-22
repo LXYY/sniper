@@ -31,7 +31,7 @@ import { MAINNET_PROGRAM_ID } from "@raydium-io/raydium-sdk";
 import solConnection from "./common/sol_connection";
 import jitoLeaderSchedule, {
   BatchJitoLeaderSchedule,
-} from "./jito/leader-schedule";
+} from "./jito/leader_schedule";
 import jitoClient from "./jito/client";
 
 async function testSwapper() {

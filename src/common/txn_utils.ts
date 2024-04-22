@@ -19,7 +19,7 @@ import { sniperPayer } from "./payer";
 import BN from "bn.js";
 import sniperConfig from "./config";
 import { Bundle } from "jito-ts/dist/sdk/block-engine/types";
-import jitoLeaderSchedule from "../jito/leader-schedule";
+import jitoLeaderSchedule from "../jito/leader_schedule";
 import jitoClient from "../jito/client";
 import bs58 from "bs58";
 

@@ -15,7 +15,7 @@ import { fromQuoteToken, toQuoteToken } from "../common/spl_token";
 import sniperConfig from "../common/config";
 import jitoLeaderSchedule, {
   JitoLeaderSchedule,
-} from "../jito/leader-schedule";
+} from "../jito/leader_schedule";
 
 export interface SnipingTaskDispatcher {
   start(): Promise<void>;

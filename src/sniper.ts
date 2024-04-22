@@ -196,18 +196,6 @@ async function testJitoClient() {
 
 async function main() {
   console.log(inspect(sniperConfig));
-  await jitoLeaderSchedule.start();
-
-  for (let i = 0; i < 500; ++i) {
-    const currentSlot = await solConnection.getSlot("recent");
-    const leaderPeriod = jitoLeaderSchedule.getNextLeaderPeriod(currentSlot);
-    console.log(`\n\n\ncurrent slot: ${currentSlot}`);
-    console.log(`leader period: ${inspect(leaderPeriod)}`);
-    console.log(
-      `next leader slot: ${inspect(await jitoClient.getNextScheduledLeader())}`,
-    );
-    await sleep(200);
-  }
 
   // await monitorJitoPoolCreation();
 
@@ -215,32 +203,32 @@ async function main() {
 
   // await testSwapper();
 
-  // // Handle SIGINT and SIGTERM gracefully.
-  // async function cleanup() {
-  //   await dispatcher.stop();
-  // }
-  //
-  // process.on("SIGINT", () => {
-  //   cleanup();
-  // });
-  // process.on("SIGTERM", () => {
-  //   cleanup();
-  // });
-  //
-  // const taskFactory = sniperConfig.spam.enabled
-  //   ? spamSnipingTaskFactory
-  //   : defaultSnipingTaskFactory;
-  //
-  // const dispatcher = new DefaultSnipingTaskDispatcher({
-  //   poolCreationEventSource: new RaydiumPoolCreationEventSource(),
-  //   creatorBlacklist: new InMemoryCreatorBlacklist(),
-  //   snipingCriteria: new RaydiumV4SnipingCriteria(),
-  //   tokenSwapperFactory: raydiumV4SwapperFactory,
-  //   snipingTaskFactory: taskFactory,
-  //   // snipingTaskFactory: spamSnipingTaskFactory,
-  //   snipingAnalyticalService: new InMemorySnipingAnalyticalService(),
-  // });
-  // await dispatcher.start();
+  // Handle SIGINT and SIGTERM gracefully.
+  async function cleanup() {
+    await dispatcher.stop();
+  }
+
+  process.on("SIGINT", () => {
+    cleanup();
+  });
+  process.on("SIGTERM", () => {
+    cleanup();
+  });
+
+  const taskFactory = sniperConfig.spam.enabled
+    ? spamSnipingTaskFactory
+    : defaultSnipingTaskFactory;
+
+  const dispatcher = new DefaultSnipingTaskDispatcher({
+    poolCreationEventSource: new RaydiumPoolCreationEventSource(),
+    creatorBlacklist: new InMemoryCreatorBlacklist(),
+    snipingCriteria: new RaydiumV4SnipingCriteria(),
+    tokenSwapperFactory: raydiumV4SwapperFactory,
+    snipingTaskFactory: taskFactory,
+    // snipingTaskFactory: spamSnipingTaskFactory,
+    snipingAnalyticalService: new InMemorySnipingAnalyticalService(),
+  });
+  await dispatcher.start();
 }
 
 main();

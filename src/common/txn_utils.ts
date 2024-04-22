@@ -14,7 +14,7 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import solConnection from "./sol_connection";
-import { sleep } from "./utils";
+import { inspect, sleep } from "./utils";
 import { sniperPayer } from "./payer";
 import BN from "bn.js";
 import sniperConfig from "./config";
@@ -40,6 +40,7 @@ export async function confirmAndGetTransaction(signature: string) {
   }
   // Skip errored transactions.
   if (result.value.err) {
+    console.log(`Transaction error: ${inspect(result.value.err)}`);
     return null;
   }
   const retryIntervalMs = 1000;

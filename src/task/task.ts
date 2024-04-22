@@ -25,6 +25,7 @@ import {
   getExecutionPriceFromSummary,
   getSnipingCriteriaInput,
   getTaskSummaryFromError,
+  printSwapSummary,
 } from "./utils";
 import jitoLeaderSchedule, {
   JitoLeaderSchedule,
@@ -158,6 +159,7 @@ export class DefaultSnipingTask implements SnipingTask {
       quote,
       this.getDefaultSwapOptions(SwapTxnType.BUY),
     );
+    printSwapSummary(buyInSummary);
     this.buyInTimestamp = buyInSummary.blockTimestamp;
     this.buyInPrice = getExecutionPriceFromSummary(buyInSummary);
     this.updatePosition(buyInSummary);
@@ -167,31 +169,23 @@ export class DefaultSnipingTask implements SnipingTask {
     if (!sniperConfig.strategy.jitoOnly) {
       return;
     }
-    let currentSlot = await solConnection.getSlot("recent");
-    const nextJitoLeaderSlot =
-      jitoLeaderSchedule.getNextLeaderPeriod(currentSlot);
+    let nextJitoLeaderSlot = await jitoLeaderSchedule.getNextLeaderSlot();
     if (
       checkSlotGap &&
-      nextJitoLeaderSlot.startSlot - currentSlot >
+      nextJitoLeaderSlot.nextSlot - nextJitoLeaderSlot.currentSlot >
         sniperConfig.strategy.maxSlotsUntilNextJitoLeader
     ) {
       throw new ErrRuntimeError(
-        `next JITO leader slot is too far away. Current slot: ${currentSlot}, next JITO leader slot: ${nextJitoLeaderSlot.startSlot}`,
+        `next JITO leader slot is too far away. Current slot: ${nextJitoLeaderSlot.currentSlot}, next JITO leader slot: ${nextJitoLeaderSlot.nextSlot}`,
       );
     }
 
-    while (currentSlot < nextJitoLeaderSlot.startSlot) {
+    while (nextJitoLeaderSlot.currentSlot < nextJitoLeaderSlot.nextSlot) {
       await sleep(sniperConfig.strategy.quoteTickIntervalMs);
-      currentSlot = await solConnection.getSlot("recent");
+      nextJitoLeaderSlot = await jitoLeaderSchedule.getNextLeaderSlot();
     }
 
-    if (currentSlot <= nextJitoLeaderSlot.endSlot) {
-      return;
-    }
-
-    throw new ErrRuntimeError(
-      `next JITO leader slot has passed. Current slot: ${currentSlot}, target JITO leader end slot: ${nextJitoLeaderSlot.endSlot}`,
-    );
+    return;
   }
 
   // Initial cash out is based on the profit-taking & loss-cutting strategy.
@@ -203,13 +197,8 @@ export class DefaultSnipingTask implements SnipingTask {
         break;
       }
       try {
-        const currentSlot = await solConnection.getSlot("recent");
-        const nextJitoLeaderPeriod =
-          jitoLeaderSchedule.getNextLeaderPeriod(currentSlot);
-        if (
-          currentSlot < nextJitoLeaderPeriod.startSlot ||
-          currentSlot > nextJitoLeaderPeriod.endSlot
-        ) {
+        const nextJitoLeaderSlot = await jitoLeaderSchedule.getNextLeaderSlot();
+        if (nextJitoLeaderSlot.currentSlot < nextJitoLeaderSlot.nextSlot) {
           continue;
         }
 
@@ -269,6 +258,7 @@ export class DefaultSnipingTask implements SnipingTask {
       quote,
       this.getDefaultSwapOptions(SwapTxnType.SELL),
     );
+    printSwapSummary(swapSummary);
     this.initialCashOutPrice = getExecutionPriceFromSummary(swapSummary);
     this.updatePosition(swapSummary);
     return true;
@@ -300,6 +290,7 @@ export class DefaultSnipingTask implements SnipingTask {
       quote,
       this.getDefaultSwapOptions(SwapTxnType.SELL),
     );
+    printSwapSummary(swapSummary);
     this.initialCashOutPrice = quote.baseTokenPrice;
     this.updatePosition(swapSummary);
     return true;
@@ -336,6 +327,7 @@ export class DefaultSnipingTask implements SnipingTask {
       quote,
       this.getDefaultSwapOptions(SwapTxnType.SELL),
     );
+    printSwapSummary(swapSummary);
     this.finalCashOutPrice = getExecutionPriceFromSummary(swapSummary);
     this.updatePosition(swapSummary);
   }

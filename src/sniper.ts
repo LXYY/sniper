@@ -212,13 +212,17 @@ async function main() {
     cleanup();
   });
 
+  const taskFactory = sniperConfig.spam.enabled
+    ? spamSnipingTaskFactory
+    : defaultSnipingTaskFactory;
+
   const dispatcher = new DefaultSnipingTaskDispatcher({
     poolCreationEventSource: new RaydiumPoolCreationEventSource(),
     creatorBlacklist: new InMemoryCreatorBlacklist(),
     snipingCriteria: new RaydiumV4SnipingCriteria(),
     tokenSwapperFactory: raydiumV4SwapperFactory,
-    // snipingTaskFactory: defaultSnipingTaskFactory,
-    snipingTaskFactory: spamSnipingTaskFactory,
+    snipingTaskFactory: taskFactory,
+    // snipingTaskFactory: spamSnipingTaskFactory,
     snipingAnalyticalService: new InMemorySnipingAnalyticalService(),
   });
   await dispatcher.start();

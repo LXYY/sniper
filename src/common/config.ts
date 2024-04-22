@@ -22,6 +22,8 @@ export interface ConfidentialConfig {
   solanaRpcUri: string;
   solanaWebsocketUri: string;
   geyserGrpcUri: string;
+  jitoPrivateKey: string;
+  jitoApiUri: string;
 }
 
 export interface GeneralConfig {
@@ -77,6 +79,9 @@ export interface StrategyConfig {
   minQuoteTokenIn: number;
   maxQuoteTokenIn: number;
   quoteTickIntervalMs: number;
+  jitoOnly: boolean;
+  maxSlotsUntilNextJitoLeader: number;
+  jitoTip: number;
 }
 
 export interface SpamConfig {
@@ -101,6 +106,8 @@ function initConfidentialConfig(): ConfidentialConfig {
     solanaRpcUri: process.env.SOLANA_RPC_URI,
     solanaWebsocketUri: process.env.SOLANA_WEBSOCKET_URI,
     geyserGrpcUri: process.env.GEYSER_GRPC_URI,
+    jitoPrivateKey: process.env.JITO_PRIVATE_KEY,
+    jitoApiUri: process.env.JITO_API,
   };
 }
 

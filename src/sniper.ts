@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { RaydiumPoolCreationEventSource } from "./event_source/raydium_event_source";
-import { inspect, sleep } from "./common/utils";
+import { binarySearch, inspect, sleep } from "./common/utils";
 import { DefaultSnipingTaskDispatcher } from "./dispatcher/dispatcher";
 import { InMemoryCreatorBlacklist } from "./dispatcher/creator_blacklist";
 import { RaydiumV4SnipingCriteria } from "./task/sniping_criteria";
@@ -27,6 +27,9 @@ import { bundle } from "jito-ts";
 import { Bundle } from "jito-ts/dist/sdk/block-engine/types";
 import { searcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import { confirmAndGetTransaction } from "./common/txn_utils";
+import { MAINNET_PROGRAM_ID } from "@raydium-io/raydium-sdk";
+import solConnection from "./common/sol_connection";
+import { BatchJitoLeaderSchedule } from "./jito/leader-schedule";
 
 async function testSwapper() {
   const jitoKeypair = Keypair.fromSecretKey(
@@ -170,6 +173,7 @@ function getEstimatedCoverage(leaders: { [p: string]: SlotList }) {
   const minSlot = Math.min(...allSlots);
   const maxSlot = Math.max(...allSlots);
   const slotRange = maxSlot - minSlot + 1;
+  console.log("Slots number: ", allSlots.length);
   return allSlots.length / slotRange;
 }
 
@@ -178,64 +182,46 @@ async function testJitoClient() {
     bs58.decode(process.env.JITO_PRIVATE_KEY),
   );
   const client = searcherClient(process.env.JITO_API, jitoKeypair);
+  const leaders = await client.getConnectedLeaders();
+  const currentSlot = await solConnection.getSlot("recent");
+  console.log(`current leader: ${inspect(leaders)}`);
+  console.log(`current slot: ${currentSlot}`);
 
-  const slotSet = new Set<number>();
-  let startSet = 0;
-  let endSet = 0;
-  for (let i = 0; i < 1000; i++) {
-    const nextLeader = await client.getNextScheduledLeader();
-    console.log(
-      `#${i} next leader: ${Date.now().toFixed(0)}, ${inspect(nextLeader)}`,
-    );
-    if (startSet == 0) {
-      startSet = nextLeader.currentSlot;
-    }
-    endSet = nextLeader.currentSlot;
-
-    if (nextLeader.currentSlot == nextLeader.nextLeaderSlot) {
-      slotSet.add(nextLeader.currentSlot);
-    } else {
-      for (let i = 0; i < 4; i++) {
-        slotSet.add(nextLeader.nextLeaderSlot + i);
-      }
-    }
-
-    await sleep(50);
-  }
-
-  const ratio = slotSet.size / (endSet - startSet + 1);
-  console.log(`jito ratio: ${ratio.toFixed(2)}`);
+  const coverage = getEstimatedCoverage(leaders);
+  console.log(`estimated coverage: ${coverage}`);
 }
 
 async function main() {
   console.log(inspect(sniperConfig));
 
-  // await testJitoClient();
+  // await monitorJitoPoolCreation();
 
-  await testSwapper();
+  //. await testJitoClient();
+
+  // await testSwapper();
 
   // // Handle SIGINT and SIGTERM gracefully.
-  // async function cleanup() {
-  //   await dispatcher.stop();
-  // }
-  //
-  // process.on("SIGINT", () => {
-  //   cleanup();
-  // });
-  // process.on("SIGTERM", () => {
-  //   cleanup();
-  // });
-  //
-  // const dispatcher = new DefaultSnipingTaskDispatcher({
-  //   poolCreationEventSource: new RaydiumPoolCreationEventSource(),
-  //   creatorBlacklist: new InMemoryCreatorBlacklist(),
-  //   snipingCriteria: new RaydiumV4SnipingCriteria(),
-  //   tokenSwapperFactory: raydiumV4SwapperFactory,
-  //   // snipingTaskFactory: defaultSnipingTaskFactory,
-  //   snipingTaskFactory: spamSnipingTaskFactory,
-  //   snipingAnalyticalService: new InMemorySnipingAnalyticalService(),
-  // });
-  // await dispatcher.start();
+  async function cleanup() {
+    await dispatcher.stop();
+  }
+
+  process.on("SIGINT", () => {
+    cleanup();
+  });
+  process.on("SIGTERM", () => {
+    cleanup();
+  });
+
+  const dispatcher = new DefaultSnipingTaskDispatcher({
+    poolCreationEventSource: new RaydiumPoolCreationEventSource(),
+    creatorBlacklist: new InMemoryCreatorBlacklist(),
+    snipingCriteria: new RaydiumV4SnipingCriteria(),
+    tokenSwapperFactory: raydiumV4SwapperFactory,
+    // snipingTaskFactory: defaultSnipingTaskFactory,
+    snipingTaskFactory: spamSnipingTaskFactory,
+    snipingAnalyticalService: new InMemorySnipingAnalyticalService(),
+  });
+  await dispatcher.start();
 }
 
 main();

@@ -18,6 +18,10 @@ import { sleep } from "./utils";
 import { sniperPayer } from "./payer";
 import BN from "bn.js";
 import sniperConfig from "./config";
+import { Bundle } from "jito-ts/dist/sdk/block-engine/types";
+import jitoLeaderSchedule from "../jito/leader-schedule";
+import jitoClient from "../jito/client";
+import bs58 from "bs58";
 
 export async function confirmAndGetTransaction(signature: string) {
   const latestBlockHash = await backOff(() =>
@@ -195,4 +199,41 @@ export function getSolBalanceChange(
   const preBalance = parsedTxn.meta.preBalances[accountIndex];
   const postBalance = parsedTxn.meta.postBalances[accountIndex];
   return new BN(Math.abs(postBalance - preBalance));
+}
+
+export interface JitoBundleReceipt {
+  bundleId: string;
+  txnSignature: string;
+}
+
+export async function sendTxnAsJitoBundle(
+  txn: VersionedTransaction,
+  tipAmount: BN,
+  payer?: Signer,
+): Promise<JitoBundleReceipt> {
+  payer = payer || sniperPayer;
+  txn.sign([payer]);
+
+  const bundle = new Bundle([], 2);
+  let maybeBundle: Bundle | Error;
+  maybeBundle = bundle.addTransactions(txn);
+  if (maybeBundle instanceof Error) {
+    throw maybeBundle;
+  }
+
+  maybeBundle = bundle.addTipTx(
+    sniperPayer,
+    tipAmount.toNumber(),
+    jitoLeaderSchedule.getTipAccounts()[0],
+    txn.message.recentBlockhash,
+  );
+  if (maybeBundle instanceof Error) {
+    throw maybeBundle;
+  }
+
+  const bundleId = await jitoClient.sendBundle(maybeBundle);
+  return {
+    bundleId,
+    txnSignature: bs58.encode(txn.signatures[0]),
+  };
 }

@@ -31,7 +31,11 @@ import { SwapDryRunner } from "./dry_runner";
 import Decimal from "decimal.js";
 import { rawAmountToDecimal, uiAmountToBN } from "../common/utils";
 import { sniperPayer } from "../common/payer";
-import { sendAndConfirmTransaction } from "../common/txn_utils";
+import {
+  confirmAndGetTransaction,
+  sendAndConfirmTransaction,
+  sendTxnAsJitoBundle,
+} from "../common/txn_utils";
 import { QuoteToken } from "../common/types";
 
 export interface RaydiumV4QuotePayload {
@@ -109,12 +113,25 @@ export class RaydiumV4Swapper implements TokenSwapper {
         ),
       };
     }
+    if (sniperConfig.strategy.jitoOnly) {
+      input.priorityFeeMicroLamports = 0;
+    }
     const txn = await getSwapTransaction(input);
-    const parsedTxn = await sendAndConfirmTransaction(
-      txn,
-      opts.skipPreflight,
-      payer,
-    );
+    let parsedTxn: ParsedTransactionWithMeta;
+    if (sniperConfig.strategy.jitoOnly) {
+      // Sends the transaction as a bundle.
+      const receipt = await sendTxnAsJitoBundle(
+        txn,
+        uiAmountToBN(sniperConfig.strategy.jitoTip, 9),
+      );
+      parsedTxn = await confirmAndGetTransaction(receipt.txnSignature);
+    } else {
+      parsedTxn = await sendAndConfirmTransaction(
+        txn,
+        opts.skipPreflight,
+        payer,
+      );
+    }
     return this.parseSwapSummary(parsedTxn, tokenIn, payer);
   }
 

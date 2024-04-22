@@ -63,3 +63,21 @@ function isNumberArray(value: any): value is number[] {
     value.every((element) => typeof element === "number")
   );
 }
+
+// Binary search for the first element that doesn't satisfy the leftPredicate.
+export function binarySearch<T>(
+  elements: T[],
+  leftPredicate: (i: number) => boolean,
+): number {
+  let left = 0;
+  let right = elements.length - 1;
+  while (left <= right) {
+    const mid = left + Math.floor((right - left) / 2);
+    if (leftPredicate(mid)) {
+      left = mid + 1;
+    } else {
+      right = mid - 1;
+    }
+  }
+  return left;
+}

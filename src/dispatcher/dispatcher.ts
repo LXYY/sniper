@@ -13,6 +13,9 @@ import Decimal from "decimal.js";
 import { SnipingPerformanceModel } from "../analytical/types";
 import { fromQuoteToken, toQuoteToken } from "../common/spl_token";
 import sniperConfig from "../common/config";
+import jitoLeaderSchedule, {
+  JitoLeaderSchedule,
+} from "../jito/leader-schedule";
 
 export interface SnipingTaskDispatcher {
   start(): Promise<void>;
@@ -148,6 +151,7 @@ export class DefaultSnipingTaskDispatcher implements SnipingTaskDispatcher {
   }
 
   async start() {
+    await jitoLeaderSchedule.start();
     await this.eventSource.start();
   }
 
@@ -169,6 +173,7 @@ export class DefaultSnipingTaskDispatcher implements SnipingTaskDispatcher {
       );
       await sleep(sniperConfig.general.activeTasksPollingInterval * 1000);
     }
+    jitoLeaderSchedule.stop();
     process.exit(0);
   }
 }

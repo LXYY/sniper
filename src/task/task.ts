@@ -26,6 +26,9 @@ import {
   getSnipingCriteriaInput,
   getTaskSummaryFromError,
 } from "./utils";
+import jitoLeaderSchedule, {
+  JitoLeaderSchedule,
+} from "../jito/leader-schedule";
 
 export interface SnipingTask {
   run(): Promise<void>;
@@ -147,6 +150,7 @@ export class DefaultSnipingTask implements SnipingTask {
   }
 
   private async buyIn() {
+    await this.tryWaitForNextJitoLeader(true);
     const buyInAmount = await this.getBuyInAmount();
     const slippage = sniperConfig.strategy.buySlippage;
     const quote = await this.tokenSwapper.getBuyQuote(buyInAmount, slippage);
@@ -159,6 +163,37 @@ export class DefaultSnipingTask implements SnipingTask {
     this.updatePosition(buyInSummary);
   }
 
+  private async tryWaitForNextJitoLeader(checkSlotGap: boolean) {
+    if (!sniperConfig.strategy.jitoOnly) {
+      return;
+    }
+    let currentSlot = await solConnection.getSlot("recent");
+    const nextJitoLeaderSlot =
+      jitoLeaderSchedule.getNextLeaderPeriod(currentSlot);
+    if (
+      checkSlotGap &&
+      nextJitoLeaderSlot.startSlot - currentSlot >
+        sniperConfig.strategy.maxSlotsUntilNextJitoLeader
+    ) {
+      throw new ErrRuntimeError(
+        `next JITO leader slot is too far away. Current slot: ${currentSlot}, next JITO leader slot: ${nextJitoLeaderSlot.startSlot}`,
+      );
+    }
+
+    while (currentSlot < nextJitoLeaderSlot.startSlot) {
+      await sleep(sniperConfig.strategy.quoteTickIntervalMs);
+      currentSlot = await solConnection.getSlot("recent");
+    }
+
+    if (currentSlot <= nextJitoLeaderSlot.endSlot) {
+      return;
+    }
+
+    throw new ErrRuntimeError(
+      `next JITO leader slot has passed. Current slot: ${currentSlot}, target JITO leader end slot: ${nextJitoLeaderSlot.endSlot}`,
+    );
+  }
+
   // Initial cash out is based on the profit-taking & loss-cutting strategy.
   private async initialCashOut() {
     while (true) {
@@ -168,6 +203,16 @@ export class DefaultSnipingTask implements SnipingTask {
         break;
       }
       try {
+        const currentSlot = await solConnection.getSlot("recent");
+        const nextJitoLeaderPeriod =
+          jitoLeaderSchedule.getNextLeaderPeriod(currentSlot);
+        if (
+          currentSlot < nextJitoLeaderPeriod.startSlot ||
+          currentSlot > nextJitoLeaderPeriod.endSlot
+        ) {
+          continue;
+        }
+
         await this.samplePrice(now);
         if (await this.tryTakeProfit()) {
           break;
@@ -267,6 +312,7 @@ export class DefaultSnipingTask implements SnipingTask {
     }
     while (true) {
       try {
+        await this.tryWaitForNextJitoLeader(false);
         await this.sellAll();
         return;
       } catch (error) {

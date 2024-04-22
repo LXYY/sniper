@@ -47,7 +47,7 @@ quoteTokenBuyInPercentage = 2
 minQuoteTokenIn = 0.5
 maxQuoteTokenIn = 0.5
 quoteTickIntervalMs = 50
-jitoOnly = false
+jitoOnly = true
 maxSlotsUntilNextJitoLeader = 10
 jitoTip = 0.005
 

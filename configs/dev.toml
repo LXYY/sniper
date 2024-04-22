@@ -49,7 +49,7 @@ maxQuoteTokenIn = 0.5
 quoteTickIntervalMs = 50
 jitoOnly = true
 maxSlotsUntilNextJitoLeader = 20
-jitoTip = 0.005
+jitoTip = 0.01
 
 [spam]
 enabled = false

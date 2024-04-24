@@ -41,31 +41,31 @@ async function testSwapper() {
   const client = searcherClient(process.env.JITO_API, jitoKeypair);
   const tipAccounts = await client.getTipAccounts();
 
-  client.onBundleResult(
-    (result) => {
-      console.log(`${Date.now()}`);
-      console.log(`bundle result: ${inspect(result)}`);
-    },
-    (err) => {
-      console.log(`bundle error: ${inspect(err)}`);
-      throw err;
-    },
-  );
-
-  while (true) {
-    const nextLeader = await client.getNextScheduledLeader();
-    // if (nextLeader.currentSlot == nextLeader.nextLeaderSlot) {
-    //   console.log(`Next leader: ${inspect(nextLeader)}`);
-    //   console.log(`Current slot: ${nextLeader.currentSlot} is a JITO slot`);
-    //   break;
-    // }
-    if (nextLeader.currentSlot < nextLeader.nextLeaderSlot) {
-      console.log(`Next leader: ${inspect(nextLeader)}`);
-      console.log(`Current slot: ${nextLeader.currentSlot} is not a JITO slot`);
-      break;
-    }
-    await sleep(200);
-  }
+  // client.onBundleResult(
+  //   (result) => {
+  //     console.log(`${Date.now()}`);
+  //     console.log(`bundle result: ${inspect(result)}`);
+  //   },
+  //   (err) => {
+  //     console.log(`bundle error: ${inspect(err)}`);
+  //     throw err;
+  //   },
+  // );
+  //
+  // while (true) {
+  //   const nextLeader = await client.getNextScheduledLeader();
+  //   // if (nextLeader.currentSlot == nextLeader.nextLeaderSlot) {
+  //   //   console.log(`Next leader: ${inspect(nextLeader)}`);
+  //   //   console.log(`Current slot: ${nextLeader.currentSlot} is a JITO slot`);
+  //   //   break;
+  //   // }
+  //   if (nextLeader.currentSlot < nextLeader.nextLeaderSlot) {
+  //     console.log(`Next leader: ${inspect(nextLeader)}`);
+  //     console.log(`Current slot: ${nextLeader.currentSlot} is not a JITO slot`);
+  //     break;
+  //   }
+  //   await sleep(200);
+  // }
 
   // console.log("Submitting txn as a bundle");
   //
@@ -83,13 +83,13 @@ async function testSwapper() {
   };
   const quoteToken = fromQuoteToken(QuoteToken.SOL);
   const swapper = raydiumV4SwapperFactory(poolId, baseToken, quoteToken);
-  let quote = await swapper.getBuyQuote(new BN(500_000_000), 5);
+  let quote = await swapper.getBuyQuote(new BN(1_000_000_000), 5);
   console.log(`buying quote: ${inspect(quote)}`);
   console.log(`[${Date.now()}] start buying`);
 
   let summary = await swapper.buyToken(quote, {
     skipPreflight: false,
-    priorityFeeInMicroLamports: 50000000,
+    priorityFeeInMicroLamports: 100_000000,
   });
   console.log("inspect summary: ", inspect(summary));
 
@@ -201,34 +201,34 @@ async function main() {
 
   //. await testJitoClient();
 
-  // await testSwapper();
+  await testSwapper();
 
   // Handle SIGINT and SIGTERM gracefully.
-  async function cleanup() {
-    await dispatcher.stop();
-  }
-
-  process.on("SIGINT", () => {
-    cleanup();
-  });
-  process.on("SIGTERM", () => {
-    cleanup();
-  });
-
-  const taskFactory = sniperConfig.spam.enabled
-    ? spamSnipingTaskFactory
-    : defaultSnipingTaskFactory;
-
-  const dispatcher = new DefaultSnipingTaskDispatcher({
-    poolCreationEventSource: new RaydiumPoolCreationEventSource(),
-    creatorBlacklist: new InMemoryCreatorBlacklist(),
-    snipingCriteria: new RaydiumV4SnipingCriteria(),
-    tokenSwapperFactory: raydiumV4SwapperFactory,
-    snipingTaskFactory: taskFactory,
-    // snipingTaskFactory: spamSnipingTaskFactory,
-    snipingAnalyticalService: new InMemorySnipingAnalyticalService(),
-  });
-  await dispatcher.start();
+  // async function cleanup() {
+  //   await dispatcher.stop();
+  // }
+  //
+  // process.on("SIGINT", () => {
+  //   cleanup();
+  // });
+  // process.on("SIGTERM", () => {
+  //   cleanup();
+  // });
+  //
+  // const taskFactory = sniperConfig.spam.enabled
+  //   ? spamSnipingTaskFactory
+  //   : defaultSnipingTaskFactory;
+  //
+  // const dispatcher = new DefaultSnipingTaskDispatcher({
+  //   poolCreationEventSource: new RaydiumPoolCreationEventSource(),
+  //   creatorBlacklist: new InMemoryCreatorBlacklist(),
+  //   snipingCriteria: new RaydiumV4SnipingCriteria(),
+  //   tokenSwapperFactory: raydiumV4SwapperFactory,
+  //   snipingTaskFactory: taskFactory,
+  //   // snipingTaskFactory: spamSnipingTaskFactory,
+  //   snipingAnalyticalService: new InMemorySnipingAnalyticalService(),
+  // });
+  // await dispatcher.start();
 }
 
 main();

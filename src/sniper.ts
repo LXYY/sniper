@@ -52,20 +52,20 @@ async function testSwapper() {
   //   },
   // );
   //
-  // while (true) {
-  //   const nextLeader = await client.getNextScheduledLeader();
-  //   // if (nextLeader.currentSlot == nextLeader.nextLeaderSlot) {
-  //   //   console.log(`Next leader: ${inspect(nextLeader)}`);
-  //   //   console.log(`Current slot: ${nextLeader.currentSlot} is a JITO slot`);
-  //   //   break;
-  //   // }
-  //   if (nextLeader.currentSlot < nextLeader.nextLeaderSlot) {
-  //     console.log(`Next leader: ${inspect(nextLeader)}`);
-  //     console.log(`Current slot: ${nextLeader.currentSlot} is not a JITO slot`);
-  //     break;
-  //   }
-  //   await sleep(200);
-  // }
+  while (true) {
+    const nextLeader = await client.getNextScheduledLeader();
+    // if (nextLeader.currentSlot == nextLeader.nextLeaderSlot) {
+    //   console.log(`Next leader: ${inspect(nextLeader)}`);
+    //   console.log(`Current slot: ${nextLeader.currentSlot} is a JITO slot`);
+    //   break;
+    // }
+    if (nextLeader.currentSlot < nextLeader.nextLeaderSlot) {
+      console.log(`Next leader: ${inspect(nextLeader)}`);
+      console.log(`Current slot: ${nextLeader.currentSlot} is not a JITO slot`);
+      break;
+    }
+    await sleep(200);
+  }
 
   // console.log("Submitting txn as a bundle");
   //
